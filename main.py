@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi import status
 
-from models import User, Category, Project, Pomodoro, Recall
+from models import RegisterUser, Category, Project, Pomodoro, Recall, ResponseUser
 
 app = FastAPI()
 
@@ -9,7 +9,7 @@ app = FastAPI()
 
 @app.post(
     path="/signup", 
-    response_model= User,
+    response_model= ResponseUser,
     status_code=status.HTTP_201_CREATED,
     summary="User registration",
     tags=['Users']
@@ -19,7 +19,7 @@ def signup():
 
 @app.post(
     path="/login", 
-    response_model= User,
+    response_model= ResponseUser,
     status_code=status.HTTP_200_OK,
     summary="User login",
     tags=['Users']
@@ -29,7 +29,7 @@ def login():
 
 @app.get(
     path="/users/{user_id}",
-    response_model=User,
+    response_model=ResponseUser,
     status_code=status.HTTP_200_OK,
     summary="Get user information",
     tags=['Users']
@@ -39,7 +39,7 @@ def get_user():
 
 @app.delete(
     path="/users/{user_id}",
-    response_model=User,
+    response_model=ResponseUser,
     status_code=status.HTTP_200_OK,
     summary="User deletion",
     tags=["Users"]
@@ -49,7 +49,7 @@ def delete_user():
 
 @app.put(
     path="/users/{user_id}",
-    response_model=User,
+    response_model=ResponseUser,
     status_code=status.HTTP_200_OK,
     summary="User update",
     tags=["Users"]
