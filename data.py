@@ -1,0 +1,47 @@
+from typing import Union
+import mysql.connector as connector
+from mysql.connector import Error
+import pandas as pd
+
+import credentials as credentials
+
+
+
+class Database:
+
+    def __init__(self) -> None:
+        self.conn, self.cursor = self.create_connection()
+
+    def create_connection(self):
+        try:
+            conn = connector.connect(
+                host='localhost',
+                database='pomodoros',
+                user=credentials.database_user,
+                password=credentials.database_password
+            )
+        except Error as e:
+            print(f"Error while connecting to MySQL: {e}")
+        
+        cursor = conn.cursor()
+
+        return conn, cursor
+
+    def close_connection(self):
+        if self.conn.is_connected():
+            self.cursor.close()
+            self.conn.close()
+
+    def execute_query(self, query:str, values:Union[tuple, list[tuple]]):
+        self.cursor.execute(query, values)
+        self.conn.commit()
+
+    def pandas_query(self, query:str)-> pd.DataFrame:
+        df = pd.read_sql(query, self.conn)
+
+        return df
+
+
+
+if __name__ == "__main__":
+    pass
