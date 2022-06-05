@@ -3,8 +3,7 @@ from enum import IntEnum
 from typing import Optional
 from uuid import UUID
 
-from pandas import NA
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, SecretStr
 
 # Constants
 ID = Field(..., gt=0, example=1)
@@ -17,27 +16,31 @@ class PomSatisfaction(IntEnum):
 
 # User models
 class BaseUser(BaseModel):
-    user_id: UUID = Field(...)
     email: EmailStr = Field(...)
     first_name: str = NAME
     last_name: str = NAME
     birth_date: Optional[date] = Field(default=None)
 
 class RegisterUser(BaseUser):
-    password: str = Field(..., min_length=8)
+    password: SecretStr = Field(..., min_length=8)
 
 class UserLogin(BaseUser):
     password: str = Field(..., min_length=8)
 
 class ResponseUser(BaseUser):
-    pass
+    user_id: UUID = Field(...)
 
 
 # Category models
-class Category(BaseModel):
-    category_id: int = ID
+class CategoryBase(BaseModel):
     category_name: str = NAME
+
+class Category(CategoryBase):
     user_id: UUID = Field(...)
+
+class CategoryResponse(CategoryBase):
+    category_id: int = ID
+
 
 
 # Project models
