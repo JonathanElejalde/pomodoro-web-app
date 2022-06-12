@@ -1,7 +1,7 @@
 from sre_parse import CATEGORIES
 from typing import Optional
 
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, status, Depends, HTTPException
 from pypika import Table, MySQLQuery, Parameter
 
 from models import Category, CategoryResponse, ResponseUser
@@ -68,6 +68,10 @@ def get_category(category_id:int, current_user:ResponseUser = Depends(get_curren
     )
 
     df = DB.pandas_query(query.get_sql())
+    if df.empty:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="This project does not exists"
+        )
     category = df.to_dict('records')[0]
     return category
 

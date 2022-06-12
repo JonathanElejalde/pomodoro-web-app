@@ -44,11 +44,16 @@ class CategoryResponse(CategoryBase):
 
 
 # Project models
-class Project(BaseModel):
-    project_id: int = ID
-    user_id: UUID = Field(...)
-    category_id: int = ID
+class ProjectBase(BaseModel):
     project_name: str = NAME
+
+class Project(ProjectBase):
+    category_id: int = ID
+
+class ProjectResponse(ProjectBase):
+    project_id: int = ID
+    category_id: int = ID
+    category_name: str = NAME
     start: date = Field(...)
     end: Optional[date] = Field(default=None)
     canceled: Optional[date] = Field(default=None)
