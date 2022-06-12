@@ -36,7 +36,7 @@ class CategoryBase(BaseModel):
     category_name: str = NAME
 
 class Category(CategoryBase):
-    user_id: UUID = Field(...)
+    pass
 
 class CategoryResponse(CategoryBase):
     category_id: int = ID

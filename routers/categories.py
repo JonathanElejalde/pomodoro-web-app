@@ -1,3 +1,4 @@
+from sre_parse import CATEGORIES
 from typing import Optional
 
 from fastapi import APIRouter, status, Depends
@@ -9,6 +10,7 @@ from routers.utils import get_current_user, get_user_id
 
 # Constants
 DB = Database()
+CATEGORIES = Table('categories')
 
 router = APIRouter(
     prefix='/categories',
@@ -20,13 +22,13 @@ router = APIRouter(
     status_code=status.HTTP_201_CREATED,
     summary="Category creation"
 )
-def create_category(category:Category):
-    categories = Table('categories')
-    query = MySQLQuery.into(categories).columns(
-        categories.category_name, categories.user_id
+def create_category(category:Category, current_user:ResponseUser = Depends(get_current_user)):
+    user_id = get_user_id()
+    query = MySQLQuery.into(CATEGORIES).columns(
+        CATEGORIES.category_name, CATEGORIES.user_id
     ).insert(Parameter('%s'), Parameter('%s'))
 
-    values = (category.category_name, str(category.user_id))
+    values = (category.category_name, user_id)
 
     DB.execute_query(query.get_sql(), values)
 
@@ -38,13 +40,12 @@ def create_category(category:Category):
     status_code=status.HTTP_200_OK,
     summary="Get categories"
 )
-def get_categories(current_user: ResponseUser = Depends(get_current_user)):
+def get_categories(current_user:ResponseUser = Depends(get_current_user)):
     user_id = get_user_id()
-    categories = Table('categories')
-    query = MySQLQuery.from_(categories).select(
-        categories.category_id, categories.category_name
+    query = MySQLQuery.from_(CATEGORIES).select(
+        CATEGORIES.category_id, CATEGORIES.category_name
     ).where(
-        categories.user_id == user_id
+        CATEGORIES.user_id == user_id
     )
 
     df = DB.pandas_query(query.get_sql())
@@ -58,12 +59,12 @@ def get_categories(current_user: ResponseUser = Depends(get_current_user)):
     summary="Get category"
 )
 
-def get_category(category_id:int, user_id:str):
-    categories = Table('categories')
-    query = MySQLQuery.from_(categories).select(
-        categories.category_id, categories.category_name
+def get_category(category_id:int, current_user:ResponseUser = Depends(get_current_user)):
+    user_id = get_user_id()
+    query = MySQLQuery.from_(CATEGORIES).select(
+        CATEGORIES.category_id, CATEGORIES.category_name
     ).where(
-        (categories.user_id == user_id) & (categories.category_id == category_id)
+        (CATEGORIES.user_id == user_id) & (CATEGORIES.category_id == category_id)
     )
 
     df = DB.pandas_query(query.get_sql())
@@ -77,12 +78,12 @@ def get_category(category_id:int, user_id:str):
     status_code=status.HTTP_200_OK,
     summary="Update category"
 )
-def update_category(category_id:int, category_name: Optional[str]):
-    categories = Table('categories')
-    query = MySQLQuery.update(categories).set(
-        categories.category_name, Parameter('%s')
+def update_category(category_id:int, category_name: Optional[str], current_user:ResponseUser = Depends(get_current_user)):
+    
+    query = MySQLQuery.update(CATEGORIES).set(
+        CATEGORIES.category_name, Parameter('%s')
         ).where(
-            categories.category_id == Parameter("%s")
+            CATEGORIES.category_id == Parameter("%s")
             )
     
     values = (category_name, category_id)
@@ -99,10 +100,10 @@ def update_category(category_id:int, category_name: Optional[str]):
     status_code=status.HTTP_200_OK,
     summary="Delete category"
 )
-def delete_category(category_id:int):
-    categories = Table('categories')
-    query = MySQLQuery.from_(categories).delete().where(
-        categories.category_id == Parameter('%s')
+def delete_category(category_id:int, current_user:ResponseUser = Depends(get_current_user)):
+    
+    query = MySQLQuery.from_(CATEGORIES).delete().where(
+        CATEGORIES.category_id == Parameter('%s')
         )
     values = (category_id,)
 
@@ -112,12 +113,3 @@ def delete_category(category_id:int):
         'Detail': f"Category ID {category_id} was deleted"
     }
 
-# @router.delete(
-#     path="/{category_ids}",
-#     response_model=list[Category],
-#     status_code=status.HTTP_200_OK,
-#     summary="Delete categories",
-#  
-# )
-# def delete_categories():
-#     pass
