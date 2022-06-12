@@ -6,7 +6,8 @@ from pypika import Table, MySQLQuery, Parameter
 
 from models import Category, CategoryResponse, ResponseUser
 from data import Database
-from routers.utils import get_current_user, get_user_id
+import queries
+from routers.utils import delete_message, get_current_user, get_user_id, delete_message
 
 # Constants
 DB = Database()
@@ -24,12 +25,13 @@ router = APIRouter(
 )
 def create_category(category:Category, current_user:ResponseUser = Depends(get_current_user)):
     user_id = get_user_id()
-    query = MySQLQuery.into(CATEGORIES).columns(
+
+    # Generate query
+    columns = [
         CATEGORIES.category_name, CATEGORIES.user_id
-    ).insert(Parameter('%s'), Parameter('%s'))
-
+    ]
+    query = queries.insert_query(CATEGORIES, columns)
     values = (category.category_name, user_id)
-
     DB.execute_query(query.get_sql(), values)
 
     return {"details": f"Category {category.category_name} was created sucessfully"}
@@ -42,13 +44,13 @@ def create_category(category:Category, current_user:ResponseUser = Depends(get_c
 )
 def get_categories(current_user:ResponseUser = Depends(get_current_user)):
     user_id = get_user_id()
-    query = MySQLQuery.from_(CATEGORIES).select(
-        CATEGORIES.category_id, CATEGORIES.category_name
-    ).where(
-        CATEGORIES.user_id == user_id
-    )
 
-    df = DB.pandas_query(query.get_sql())
+    # Generate query
+    columns = [CATEGORIES.category_id, CATEGORIES.category_name]
+    condition = (CATEGORIES.user_id == Parameter("%s"))
+    query = queries.select_query(CATEGORIES, columns, condition)
+    values = (user_id, )
+    df = DB.pandas_query(query.get_sql(), values)
     return df.to_dict('records')
 
 
@@ -61,13 +63,14 @@ def get_categories(current_user:ResponseUser = Depends(get_current_user)):
 
 def get_category(category_id:int, current_user:ResponseUser = Depends(get_current_user)):
     user_id = get_user_id()
-    query = MySQLQuery.from_(CATEGORIES).select(
-        CATEGORIES.category_id, CATEGORIES.category_name
-    ).where(
-        (CATEGORIES.user_id == user_id) & (CATEGORIES.category_id == category_id)
-    )
 
-    df = DB.pandas_query(query.get_sql())
+    # Generate query
+    columns = [CATEGORIES.category_id, CATEGORIES.category_name]
+    condition = (CATEGORIES.user_id == Parameter("%s")) & (CATEGORIES.category_id == Parameter("%s"))
+    query = queries.select_query(CATEGORIES, columns, condition)
+    values = (user_id, category_id)
+    df = DB.pandas_query(query.get_sql(), values)
+
     if df.empty:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="This project does not exists"
@@ -83,12 +86,11 @@ def get_category(category_id:int, current_user:ResponseUser = Depends(get_curren
     summary="Update category"
 )
 def update_category(category_id:int, category_name: Optional[str], current_user:ResponseUser = Depends(get_current_user)):
-    
-    query = MySQLQuery.update(CATEGORIES).set(
-        CATEGORIES.category_name, Parameter('%s')
-        ).where(
-            CATEGORIES.category_id == Parameter("%s")
-            )
+
+    # Generate query
+    updates = (CATEGORIES.category_name, Parameter('%s'))
+    condition = (CATEGORIES.category_id == Parameter("%s"))
+    query = queries.update_query(CATEGORIES, updates, condition)
     
     values = (category_name, category_id)
     DB.execute_query(query.get_sql(), values)
@@ -106,14 +108,12 @@ def update_category(category_id:int, category_name: Optional[str], current_user:
 )
 def delete_category(category_id:int, current_user:ResponseUser = Depends(get_current_user)):
     
-    query = MySQLQuery.from_(CATEGORIES).delete().where(
-        CATEGORIES.category_id == Parameter('%s')
-        )
+    condition = (CATEGORIES.category_id == Parameter('%s'))
+    query = queries.delete_query(CATEGORIES, condition)
     values = (category_id,)
-
     DB.execute_query(query.get_sql(), values)
-
+    message = delete_message(DB, 'categories', category_id)
     return {
-        'Detail': f"Category ID {category_id} was deleted"
+        'Detail': message
     }
 

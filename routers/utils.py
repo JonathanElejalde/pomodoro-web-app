@@ -17,6 +17,16 @@ def get_user_id():
 
     return user_id
 
+def delete_message(db, table, id_deleted):
+    if db.cursor.rowcount > 0:
+        message = f"{id_deleted} id from {table} was deleted"
+    elif db.cursor.rowcount == 0:
+        message = f"Id {id_deleted} for {table} does not exists"
+    else:
+        message = "Unexpected error occured"
+
+    return message
+
 # User utils
 
 PWD_CXT = CryptContext(schemes=['bcrypt'], deprecated='auto')

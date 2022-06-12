@@ -5,7 +5,8 @@ from pypika import Tables, MySQLQuery, Parameter
 
 from models import Project, ProjectResponse, ResponseUser
 from data import Database
-from routers.utils import get_current_user, get_user_id
+import queries
+from routers.utils import get_current_user, get_user_id, delete_message
 
 # Constants
 DB = Database()
@@ -26,16 +27,19 @@ router = APIRouter(
 )
 def create_project(project:Project, current_user:ResponseUser = Depends(get_current_user)):
     user_id = get_user_id()
+
+    # Generate query
+    columns = [
+        PROJECTS.user_id, PROJECTS.category_id, 
+        PROJECTS.project_name, PROJECTS.start
+    ]
+    query = queries.insert_query(PROJECTS, columns)
+
+    # Generate values
     start = datetime.today()
     values = (user_id, project.category_id, project.project_name, start)
 
-    placeholders = [Parameter("%s") for _ in range(len(values))]
-
-    query = MySQLQuery.into(PROJECTS).columns(
-        PROJECTS.user_id, PROJECTS.category_id, 
-        PROJECTS.project_name, PROJECTS.start
-    ).insert(*placeholders)
-
+    # Execute query
     DB.execute_query(query.get_sql(), values)
 
     return {"details": f"Project {project.project_name} was created sucessfully"}
@@ -49,19 +53,26 @@ def create_project(project:Project, current_user:ResponseUser = Depends(get_curr
 )
 def get_projects(category_id:int, current_user:ResponseUser = Depends(get_current_user)):
     user_id = get_user_id()
-    query = MySQLQuery \
-        .from_(PROJECTS) \
-        .join(CATEGORIES) \
-        .on_field('category_id', 'user_id') \
-        .select(
-            PROJECTS.project_id, PROJECTS.category_id,
-            CATEGORIES.category_name, PROJECTS.project_name,
-            PROJECTS.start, PROJECTS.end, PROJECTS.canceled
-        ) \
-        .where(
-            (PROJECTS.user_id == Parameter('%s')) & (PROJECTS.category_id == Parameter('%s'))
-        )
+
+    # Generate query
+    on_fields = ('category_id', 'user_id')
+    columns = [
+        PROJECTS.project_id, PROJECTS.category_id,
+        CATEGORIES.category_name, PROJECTS.project_name,
+        PROJECTS.start, PROJECTS.end, PROJECTS.canceled
+    ]
+    condition = (
+        (PROJECTS.user_id == Parameter('%s')) & (PROJECTS.category_id == Parameter('%s'))
+    )
+    query = queries.select_join_query(
+        PROJECTS, CATEGORIES, on_fields,
+        columns, condition
+    )
+
+    # Generate values
     values = (user_id, category_id)
+
+    # Execute query
     df = DB.pandas_query(query.get_sql(), values)
     if df.empty:
         raise HTTPException(
@@ -79,19 +90,25 @@ def get_projects(category_id:int, current_user:ResponseUser = Depends(get_curren
 )
 def get_project(project_id:int, current_user:ResponseUser = Depends(get_current_user)):
     user_id = get_user_id()
-    query = MySQLQuery \
-        .from_(PROJECTS) \
-        .join(CATEGORIES) \
-        .on_field('category_id', 'user_id') \
-        .select(
-            PROJECTS.project_id, PROJECTS.category_id,
-            CATEGORIES.category_name, PROJECTS.project_name,
-            PROJECTS.start, PROJECTS.end, PROJECTS.canceled
-        ) \
-        .where(
-            (PROJECTS.user_id == Parameter('%s')) & (PROJECTS.project_id == Parameter('%s'))
-        )
+
+    # Generate query
+    on_fields = ('category_id', 'user_id')
+    columns = [
+        PROJECTS.project_id, PROJECTS.category_id,
+        CATEGORIES.category_name, PROJECTS.project_name,
+        PROJECTS.start, PROJECTS.end, PROJECTS.canceled
+    ]
+    condition = (
+        (PROJECTS.user_id == Parameter('%s')) & (PROJECTS.project_id == Parameter('%s'))
+    )
+    query = queries.select_join_query(
+        PROJECTS, CATEGORIES, on_fields,
+        columns, condition
+    )
+    # Generate values
     values = (user_id, project_id)
+
+    # Execute query
     df = DB.pandas_query(query.get_sql(), values)
     if df.empty:
         raise HTTPException(
@@ -110,13 +127,19 @@ def get_project(project_id:int, current_user:ResponseUser = Depends(get_current_
 )
 def update_project(project_id:int, current_user:ResponseUser = Depends(get_current_user)):
     user_id = get_user_id()
-    query = MySQLQuery.update(PROJECTS).set(
-        PROJECTS.end, Parameter('%s')
-        ).where(
-            (PROJECTS.project_id == Parameter("%s")) & (PROJECTS.user_id == Parameter('%s'))
-            )
+
+    # Generate query
+    updates = (PROJECTS.end, Parameter('%s'))
+    condition = (
+        (PROJECTS.project_id == Parameter("%s")) & (PROJECTS.user_id == Parameter('%s'))
+    )
+    query = queries.update_query(PROJECTS, updates, condition)
+
+    # Generate values
     end = datetime.today().date()
     values = (end, project_id, user_id)
+
+    # Execute query
     DB.execute_query(query.get_sql(), values)
 
     return {
@@ -130,13 +153,19 @@ def update_project(project_id:int, current_user:ResponseUser = Depends(get_curre
 )
 def update_project(project_id:int, current_user:ResponseUser = Depends(get_current_user)):
     user_id = get_user_id()
-    query = MySQLQuery.update(PROJECTS).set(
-        PROJECTS.canceled, Parameter('%s')
-        ).where(
-            (PROJECTS.project_id == Parameter("%s")) & (PROJECTS.user_id == Parameter('%s'))
-            )
+
+    # Generate query
+    updates = (PROJECTS.canceled, Parameter('%s'))
+    condition = (
+        (PROJECTS.project_id == Parameter("%s")) & (PROJECTS.user_id == Parameter('%s'))
+    )
+    query = queries.update_query(PROJECTS, updates, condition)
+
+    # Generate values
     canceled = datetime.today().date()
     values = (canceled, project_id, user_id)
+    
+    # Execute query
     DB.execute_query(query.get_sql(), values)
 
     return {
@@ -151,12 +180,18 @@ def update_project(project_id:int, current_user:ResponseUser = Depends(get_curre
 )
 def update_project(project_id:int, new_project_name:str, current_user:ResponseUser = Depends(get_current_user)):
     user_id = get_user_id()
-    query = MySQLQuery.update(PROJECTS).set(
-        PROJECTS.project_name, Parameter('%s')
-        ).where(
-            (PROJECTS.project_id == Parameter("%s")) & (PROJECTS.user_id == Parameter('%s'))
-            )
+
+    # Generate query
+    updates = (PROJECTS.project_name, Parameter('%s'))
+    condition = (
+        (PROJECTS.project_id == Parameter("%s")) & (PROJECTS.user_id == Parameter('%s'))
+    )
+    query = queries.update_query(PROJECTS, updates, condition)
+
+    # Generate values
     values = (new_project_name, project_id, user_id)
+    
+    # Execute query
     DB.execute_query(query.get_sql(), values)
 
     return {
@@ -172,18 +207,19 @@ def update_project(project_id:int, new_project_name:str, current_user:ResponseUs
 def delete_project(project_id:int, current_user:ResponseUser = Depends(get_current_user)):
     user_id = get_user_id()
 
-    query = MySQLQuery.from_(PROJECTS).delete().where(
+    # Generate query
+    condition = (
         (PROJECTS.project_id == Parameter('%s')) & (PROJECTS.user_id == Parameter('%s'))
-        )
+    )
+    query = queries.delete_query(PROJECTS, condition)
+
+    # Generate values
     values = (project_id, user_id)
+    
+    # Execute query
     DB.execute_query(query.get_sql(), values)
 
-    if DB.cursor.rowcount > 0:
-        message = f"Project id {project_id} was deleted"
-    elif DB.cursor.rowcount == 0:
-        message = f"Project id does not exists"
-    else:
-        message = "Unexpected error occured"
+    message = delete_message(DB, 'projects', project_id)
 
     return {
         'Detail': message

@@ -7,12 +7,13 @@ from fastapi import APIRouter, Request, Depends, status, Form, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from pydantic import EmailStr, SecretStr
-from pypika import Table, MySQLQuery, Parameter
+from pypika import Table, Parameter
 
 from credentials import ACCESS_TOKEN_EXPIRE_MINUTES
 from data import Database
 from models import ResponseUser, Token
-from routers.utils import verify_password, create_access_token, get_user_id, get_current_user
+import queries
+from routers.utils import verify_password, create_access_token, get_user_id, get_current_user, delete_message
 
 # Constants
 PWD_CXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -40,26 +41,24 @@ def signup(
     user_id = uuid4()
     values = (str(user_id), email, hashed_passw, first_name, last_name, birth_date)
 
-    # Create placeholders
-    placeholders = [Parameter("%s") for _ in range(len(values))]
+    columns = [
+        USERS.user_id, USERS.email, USERS.password,
+        USERS.first_name, USERS.last_name, USERS.birth_date,
+    ]
 
-    # Query
-    query = (
-        MySQLQuery.into(USERS)
-        .columns(
-            USERS.user_id,
-            USERS.email,
-            USERS.password,
-            USERS.first_name,
-            USERS.last_name,
-            USERS.birth_date,
-        )
-        .insert(*placeholders)
-    )
-
+    query = queries.insert_query(USERS, columns)
     DB.execute_query(query.get_sql(), values)
 
-    return {"Detail": "User created"}
+    return {
+        "Detail": "User created",
+        "User Data": {
+            "user_id": user_id,
+            "email": email,
+            "first_name": first_name,
+            "last_name": last_name,
+            "birth_date": birth_date
+        }
+        }
 
 
 @router.post(
@@ -72,20 +71,15 @@ def login(auth_data: OAuth2PasswordRequestForm = Depends(), request: Request = N
     # Get email and password from request
     email = auth_data.username
     password = auth_data.password
+    
+    # Generate query
+    columns = [
+        USERS.user_id, USERS.email, USERS.first_name,
+        USERS.last_name, USERS.birth_date, USERS.password,
+    ]
+    condition = (USERS.email == Parameter("%s"))
+    query = queries.select_query(USERS, columns, condition)
 
-    # Create query
-    query = (
-        MySQLQuery.from_(USERS)
-        .select(
-            USERS.user_id,
-            USERS.email,
-            USERS.first_name,
-            USERS.last_name,
-            USERS.birth_date,
-            USERS.password,
-        )
-        .where(USERS.email == Parameter("%s"))
-    )
     # Create values
     values = (email,)
 
@@ -122,17 +116,14 @@ def login(auth_data: OAuth2PasswordRequestForm = Depends(), request: Request = N
 )
 def delete_user(current_user: ResponseUser = Depends(get_current_user)):
     user_id = get_user_id()
-
-    query = MySQLQuery.from_(USERS).delete().where(USERS.user_id == Parameter("%s"))
+    
+    # Generate query
+    delete_condition = (USERS.user_id == Parameter("%s"))
+    query = queries.delete_query(USERS, delete_condition)
     values = (user_id,)
-    DB.execute_query(query.get_sql(), values)
 
-    if DB.cursor.rowcount > 0:
-        message = f"User ID {user_id} was deleted"
-    elif DB.cursor.rowcount == 0:
-        message = f"User ID does not exists"
-    else:
-        message = "Unexpected error occured"
+    DB.execute_query(query.get_sql(), values)
+    message = delete_message(DB, 'users', user_id)
 
     return {"Detail": message}
 
