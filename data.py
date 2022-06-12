@@ -36,8 +36,8 @@ class Database:
         self.cursor.execute(query, values)
         self.conn.commit()
 
-    def pandas_query(self, query:str)-> pd.DataFrame:
-        df = pd.read_sql(query, self.conn)
+    def pandas_query(self, query:str, params:Union[tuple, list[tuple], dict] = ())-> pd.DataFrame:
+        df = pd.read_sql(query, self.conn, params=params)
 
         return df
 

@@ -1,13 +1,18 @@
-from datetime import date
+from datetime import date, timedelta
+import os
+from tokenize import Token
 from uuid import uuid4
 
-from fastapi import APIRouter, status, Form
+from fastapi import APIRouter, Request, Depends, status, Form, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from pydantic import EmailStr, SecretStr
 from pypika import Table, MySQLQuery, Parameter
 
-from models import ResponseUser
+from credentials import ACCESS_TOKEN_EXPIRE_MINUTES
 from data import Database
+from models import ResponseUser, Token, UserLogin
+from routers.utils import verify_password, create_access_token
 
 # Constants
 PWD_CXT = CryptContext(schemes=['bcrypt'], deprecated='auto')
@@ -33,7 +38,7 @@ def signup(
     password:SecretStr = Form(..., min_length=8)
 ):  
     # Get values
-    hashed_passw = PWD_CXT.hash(str(password))
+    hashed_passw = PWD_CXT.hash(password.get_secret_value())
     user_id = uuid4()
     values = (
         str(user_id), email, hashed_passw,
@@ -56,12 +61,53 @@ def signup(
 
 @router.post(
     path="/login", 
-    response_model= ResponseUser,
+    response_model= Token,
     status_code=status.HTTP_200_OK,
     summary="User login"
 )
-def login():
-    pass
+def login(auth_data: OAuth2PasswordRequestForm = Depends(), request: Request = None):
+    # Get email and password from request
+    email = auth_data.username
+    password = auth_data.password
+    
+    # Create query
+    users = Table('users')
+    query = MySQLQuery.from_(users).select(
+        users.user_id, users.email, users.first_name,
+        users.last_name, users.birth_date, users.password
+    ).where(
+        users.email == Parameter('%s')
+    )
+    # Create values
+    values = (email,)
+
+    # Get user that matches email
+    user = DB.pandas_query(query.get_sql(), values)
+    if user.empty:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Email does not exists'
+        )
+    user = user.to_dict('records')[0]
+    # Confirm password
+    if not verify_password(
+        password, user['password']
+        ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Password is incorrect'
+        )
+
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user['email']}, expires_delta=access_token_expires
+    )
+
+    # Save user_id in environment
+    os.environ['USER_ID'] = user['user_id']
+
+    return {"access_token": access_token, "token_type": "bearer"}
+
 
 @router.get(
     path="/",
@@ -91,20 +137,25 @@ def get_user():
 
 @router.delete(
     path="/{user_id}",
-    response_model=ResponseUser,
     status_code=status.HTTP_200_OK,
     summary="User deletion",
     tags=["Users"]
 )
-def delete_user():
-    pass
+def delete_user(user_id:str):
+    users = Table('users')
+    query = MySQLQuery.from_(users).delete().where(
+        users.user_id == Parameter('%s')
+        )
+    values = (user_id,)
+    DB.execute_query(query.get_sql(), values)
 
-@router.put(
-    path="/{user_id}",
-    response_model=ResponseUser,
-    status_code=status.HTTP_200_OK,
-    summary="User update",
-    tags=["Users"]
-)
-def update_user():
-    pass
+    if DB.cursor.rowcount > 0:
+        message = f"User ID {user_id} was deleted"
+    elif DB.cursor.rowcount == 0:
+        message = f"User ID does not exists"
+    else:
+        message = "Unexpected error occured"
+
+    return {
+        'Detail': message
+    }

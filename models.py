@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from enum import IntEnum
-from typing import Optional
+from typing import Optional, Union
 from uuid import UUID
 
 from pydantic import BaseModel, Field, EmailStr, SecretStr
@@ -73,3 +73,13 @@ class Recall(BaseModel):
     recall: str = Field(...)
     recall_title: str = Field(..., max_length=255)
 
+# JWT token models
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    username: Union[str,None] = None
+    

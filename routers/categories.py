@@ -1,10 +1,11 @@
 from typing import Optional
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, Depends
 from pypika import Table, MySQLQuery, Parameter
 
-from models import Category, CategoryResponse
+from models import Category, CategoryResponse, ResponseUser
 from data import Database
+from routers.utils import get_current_user, get_user_id
 
 # Constants
 DB = Database()
@@ -37,8 +38,8 @@ def create_category(category:Category):
     status_code=status.HTTP_200_OK,
     summary="Get categories"
 )
-def get_categories(user_id:str):
-
+def get_categories(current_user: ResponseUser = Depends(get_current_user)):
+    user_id = get_user_id()
     categories = Table('categories')
     query = MySQLQuery.from_(categories).select(
         categories.category_id, categories.category_name
