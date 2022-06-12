@@ -11,72 +11,80 @@ from pypika import Table, MySQLQuery, Parameter
 
 from credentials import ACCESS_TOKEN_EXPIRE_MINUTES
 from data import Database
-from models import ResponseUser, Token, UserLogin
-from routers.utils import verify_password, create_access_token
+from models import ResponseUser, Token
+from routers.utils import verify_password, create_access_token, get_user_id, get_current_user
 
 # Constants
-PWD_CXT = CryptContext(schemes=['bcrypt'], deprecated='auto')
+PWD_CXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
 DB = Database()
+USERS = Table("users")
 
 
-router = APIRouter(
-    prefix='/users',
-    tags=['Users']
-)
+router = APIRouter(prefix="/users", tags=["Users"])
 
 # User paths
 
+
 @router.post(
-    path="/signup", 
-    #response_model= ResponseUser,
-    status_code=status.HTTP_201_CREATED,
-    summary="User registration"
+    path="/signup", status_code=status.HTTP_201_CREATED, summary="User registration"
 )
 def signup(
-    email:EmailStr = Form(...), first_name:str = Form(..., min_length=1, max_length=255),
-    last_name:str = Form(..., min_length=1, max_length=255), birth_date:date = Form(..., example=date.today()),
-    password:SecretStr = Form(..., min_length=8)
-):  
+    email: EmailStr = Form(...),
+    first_name: str = Form(..., min_length=1, max_length=255),
+    last_name: str = Form(..., min_length=1, max_length=255),
+    birth_date: date = Form(..., example=date.today()),
+    password: SecretStr = Form(..., min_length=8),
+):
     # Get values
     hashed_passw = PWD_CXT.hash(password.get_secret_value())
     user_id = uuid4()
-    values = (
-        str(user_id), email, hashed_passw,
-        first_name, last_name, birth_date
-    )
+    values = (str(user_id), email, hashed_passw, first_name, last_name, birth_date)
 
     # Create placeholders
-    placeholders = [Parameter('%s') for _ in range(len(values))]
+    placeholders = [Parameter("%s") for _ in range(len(values))]
 
     # Query
-    users = Table('users')
-    query = MySQLQuery.into(users).columns(
-        users.user_id, users.email, users.password,
-        users.first_name, users.last_name, users.birth_date
-    ).insert(*placeholders)
-    
+    query = (
+        MySQLQuery.into(USERS)
+        .columns(
+            USERS.user_id,
+            USERS.email,
+            USERS.password,
+            USERS.first_name,
+            USERS.last_name,
+            USERS.birth_date,
+        )
+        .insert(*placeholders)
+    )
+
     DB.execute_query(query.get_sql(), values)
-    
-    return {'Detail': "User created"}
+
+    return {"Detail": "User created"}
+
 
 @router.post(
-    path="/login", 
-    response_model= Token,
+    path="/login",
+    response_model=Token,
     status_code=status.HTTP_200_OK,
-    summary="User login"
+    summary="User login",
 )
 def login(auth_data: OAuth2PasswordRequestForm = Depends(), request: Request = None):
     # Get email and password from request
     email = auth_data.username
     password = auth_data.password
-    
+
     # Create query
-    users = Table('users')
-    query = MySQLQuery.from_(users).select(
-        users.user_id, users.email, users.first_name,
-        users.last_name, users.birth_date, users.password
-    ).where(
-        users.email == Parameter('%s')
+    query = (
+        MySQLQuery.from_(USERS)
+        .select(
+            USERS.user_id,
+            USERS.email,
+            USERS.first_name,
+            USERS.last_name,
+            USERS.birth_date,
+            USERS.password,
+        )
+        .where(USERS.email == Parameter("%s"))
     )
     # Create values
     values = (email,)
@@ -85,67 +93,37 @@ def login(auth_data: OAuth2PasswordRequestForm = Depends(), request: Request = N
     user = DB.pandas_query(query.get_sql(), values)
     if user.empty:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='Email does not exists'
+            status_code=status.HTTP_404_NOT_FOUND, detail="Email does not exists"
         )
-    user = user.to_dict('records')[0]
+    user = user.to_dict("records")[0]
     # Confirm password
-    if not verify_password(
-        password, user['password']
-        ):
+    if not verify_password(password, user["password"]):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Password is incorrect'
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Password is incorrect"
         )
 
+    # If user authenticas correctly, create an access token.
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user['email']}, expires_delta=access_token_expires
+        data={"sub": user["email"]}, expires_delta=access_token_expires
     )
 
     # Save user_id in environment
-    os.environ['USER_ID'] = user['user_id']
+    os.environ["USER_ID"] = user["user_id"]
 
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get(
-    path="/",
-    response_model=list[ResponseUser],
-    status_code=status.HTTP_200_OK,
-    summary="Get all users"
-)
-def get_users():
-    users = Table('users')
-    query = MySQLQuery.from_(users).select(
-        users.user_id, users.email,
-        users.first_name, users.last_name,
-        users.birth_date
-    )
-    df = DB.pandas_query(query.get_sql())
-    return df.to_dict('records')
-
-
-@router.get(
-    path="/{user_id}",
-    response_model=ResponseUser,
-    status_code=status.HTTP_200_OK,
-    summary="Get specific user information"
-)
-def get_user():
-    pass
-
 @router.delete(
-    path="/{user_id}",
+    path="/",
     status_code=status.HTTP_200_OK,
-    summary="User deletion",
-    tags=["Users"]
+    summary="Delete logged user",
+    tags=["Users"],
 )
-def delete_user(user_id:str):
-    users = Table('users')
-    query = MySQLQuery.from_(users).delete().where(
-        users.user_id == Parameter('%s')
-        )
+def delete_user(current_user: ResponseUser = Depends(get_current_user)):
+    user_id = get_user_id()
+
+    query = MySQLQuery.from_(USERS).delete().where(USERS.user_id == Parameter("%s"))
     values = (user_id,)
     DB.execute_query(query.get_sql(), values)
 
@@ -156,6 +134,43 @@ def delete_user(user_id:str):
     else:
         message = "Unexpected error occured"
 
-    return {
-        'Detail': message
-    }
+    return {"Detail": message}
+
+
+# ADMIN ENDPOINT
+
+# @router.get(
+#     path="/",
+#     response_model=list[ResponseUser],
+#     status_code=status.HTTP_200_OK,
+#     summary="Get all users",
+# )
+# def get_users():
+#     users = Table("users")
+#     query = MySQLQuery.from_(users).select(
+#         users.user_id, users.email, users.first_name, users.last_name, users.birth_date
+#     )
+#     df = DB.pandas_query(query.get_sql())
+#     return df.to_dict("records")
+
+# ADMIN ENDPOINT
+
+# @router.get(
+#     path="/{user_id}",
+#     response_model=ResponseUser,
+#     status_code=status.HTTP_200_OK,
+#     summary="Get specific user information",
+# )
+# def get_user():
+#     pass
+
+# Admin endpoint
+
+# @router.delete(
+#     path="/{user_id}",
+#     status_code=status.HTTP_200_OK,
+#     summary="Delete user by id",
+#     tags=["Users"],
+# )
+# def delete_user(user_id):
+#      pass
