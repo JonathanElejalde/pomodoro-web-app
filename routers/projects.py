@@ -1,7 +1,7 @@
-from datetime import date, datetime
+from datetime import datetime
 
 from fastapi import APIRouter, status, Depends, HTTPException
-from pypika import Tables, MySQLQuery, Parameter
+from pypika import Tables, Parameter
 
 from models import Project, ProjectResponse, ResponseUser
 from data import Database

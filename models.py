@@ -60,14 +60,19 @@ class ProjectResponse(ProjectBase):
 
 
 # Pomodoro models
-class Pomodoro(BaseModel):
-    pomodoro_id: int = ID
-    project_id: int = ID
-    user_id: UUID = Field(...)
-    category_id: int = ID
+class PomodoroBase(BaseModel):
     duration: int = Field(..., ge=25)
+
+class Pomodoro(PomodoroBase):
+    project_id: int = ID
+    category_id: int = ID
+
+class PomodoroResponse(PomodoroBase):
     pomodoro_date: datetime = Field(...)
+    project_name: str = NAME
+    category_name: str = NAME
     pomodoro_satisfaction: PomSatisfaction = Field(...)
+
 
 
 # Recall models

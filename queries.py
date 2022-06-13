@@ -35,6 +35,20 @@ def select_join_query(
         query = query.where(condition)
 
     return query
+
+def select_join_on_query(
+    from_:Table, join_on:list[tuple[Table, tuple]], 
+    columns:list[Field], condition:tuple = None
+    )-> MySQLQuery:
+    query = MySQLQuery.from_(from_)
+    for table, on_condition in join_on:
+        query = query.join(table).on(on_condition)
+
+    query = query.select(*columns)
+    if condition:
+        query = query.where(condition)
+
+    return query
     
 
 def delete_query(table:Table, condition:tuple)-> MySQLQuery:
