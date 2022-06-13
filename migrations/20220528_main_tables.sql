@@ -54,7 +54,7 @@ CREATE TABLE `pomodoros` (
   `project_id` INT unsigned NOT NULL,
   `duration` INT unsigned NOT NULL,
   `pomodoro_date` datetime NOT NULL,
-  `pomodoro_satisfaction` INT unsigned NOT NULL,
+  `pomodoro_satisfaction` INT unsigned,
   PRIMARY KEY (`pomodoro_id`),
   FOREIGN KEY (`user_id`) REFERENCES users(`user_id`),
   FOREIGN KEY (`category_id`) REFERENCES categories(`category_id`),
