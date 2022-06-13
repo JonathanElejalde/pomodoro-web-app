@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from enum import IntEnum
+from enum import Enum
 from typing import Optional, Union
 from uuid import UUID
 
@@ -10,9 +10,15 @@ ID = Field(..., gt=0, example=1)
 NAME = Field(..., min_length=1, max_length=255)
 
 # Enums
-class PomSatisfaction(IntEnum):
-    good = 1
-    bad = 2
+class PomSatisfaction(Enum):
+    missing = "missing"
+    good = "good"
+    bad = "bad"
+    not_qualified_yet = ""
+
+class Satisfaction(Enum):
+    good = "good"
+    bad = "bad"
 
 # User models
 class BaseUser(BaseModel):
@@ -68,10 +74,11 @@ class Pomodoro(PomodoroBase):
     category_id: int = ID
 
 class PomodoroResponse(PomodoroBase):
+    pomodoro_id: int = ID
     pomodoro_date: datetime = Field(...)
     project_name: str = NAME
     category_name: str = NAME
-    pomodoro_satisfaction: PomSatisfaction = Field(...)
+    pomodoro_satisfaction: PomSatisfaction
 
 
 

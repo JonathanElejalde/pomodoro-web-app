@@ -34,6 +34,25 @@ PWD_CXT = CryptContext(schemes=['bcrypt'], deprecated='auto')
 def verify_password(plain_pass, hashed_pass):
     return PWD_CXT.verify(plain_pass, hashed_pass)
 
+
+# Pomodoros utils
+
+def get_satisfaction_int(satisfaction):
+    satisfaction_dict = {
+        "good": 1,
+        "bad": 2
+    }
+
+    value = satisfaction_dict.get(satisfaction)
+
+    if not value:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Pomodoro satisfaction has to be either 'good' or 'bad' currently it is {satisfaction}",
+            )
+    return value
+    
+
 # JWT token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
 

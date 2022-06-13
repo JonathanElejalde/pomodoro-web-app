@@ -1,6 +1,6 @@
 from typing import Union
 
-from pypika import Table, MySQLQuery, Parameter, Field
+from pypika import Table, MySQLQuery, Parameter, Field, Order
 
 
 def create_placeholders(amount:int)-> list[Parameter]:
@@ -47,7 +47,7 @@ def select_join_on_query(
     query = query.select(*columns)
     if condition:
         query = query.where(condition)
-
+    query = query.orderby('pomodoro_date', order=Order.desc)
     return query
     
 
