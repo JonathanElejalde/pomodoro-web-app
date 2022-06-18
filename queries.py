@@ -14,8 +14,12 @@ def insert_query(table:Table, columns:list[Field])-> MySQLQuery:
     
     return query
 
-def select_query(table:Table, columns:list[Field], condition:tuple = None)-> MySQLQuery:
+def select_query(table:Table, columns:list[Field], condition:tuple = None, distinct:bool = False)-> MySQLQuery:
     query = MySQLQuery.from_(table).select(*columns)
+
+    if distinct:
+        query = query.distinct()
+
     if condition:
         query = query.where(condition)
 
