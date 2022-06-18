@@ -21,7 +21,7 @@ def delete_message(db):
     if db.cursor.rowcount > 0:
         message = f"Deletion was successfull"
     elif db.cursor.rowcount == 0:
-        message = f"There were not delitions"
+        message = f"There were not deletions"
     else:
         message = "Unexpected error occured"
 
