@@ -112,7 +112,7 @@ def delete_category(category_id:int, current_user:ResponseUser = Depends(get_cur
     query = queries.delete_query(CATEGORIES, condition)
     values = (category_id,)
     DB.execute_query(query.get_sql(), values)
-    message = delete_message(DB, 'categories', category_id)
+    message = delete_message(DB)
     return {
         'Detail': message
     }

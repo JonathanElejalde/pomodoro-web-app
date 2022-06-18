@@ -123,7 +123,7 @@ def delete_user(current_user: ResponseUser = Depends(get_current_user)):
     values = (user_id,)
 
     DB.execute_query(query.get_sql(), values)
-    message = delete_message(DB, 'users', user_id)
+    message = delete_message(DB)
 
     return {"Detail": message}
 

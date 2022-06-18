@@ -219,7 +219,7 @@ def delete_project(project_id:int, current_user:ResponseUser = Depends(get_curre
     # Execute query
     DB.execute_query(query.get_sql(), values)
 
-    message = delete_message(DB, 'projects', project_id)
+    message = delete_message(DB)
 
     return {
         'Detail': message

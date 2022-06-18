@@ -124,7 +124,7 @@ def get_recall_project_names(
     # Execute query
     DB.execute_query(query.get_sql(), values)
 
-    message = delete_message(DB, 'projects', recall_project_id)
+    message = delete_message(DB)
 
     return {
         'Detail': message
