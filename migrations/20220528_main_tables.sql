@@ -61,6 +61,20 @@ CREATE TABLE `pomodoros` (
   FOREIGN KEY (`project_id`) REFERENCES projects(`project_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
+
+#
+# TABLE STRUCTURE FOR: recall_projects
+#
+
+CREATE TABLE `recall_projects` (
+  `recall_project_id` INT unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` varchar(50) NOT NULL,
+  `project_name` varchar(255) NOT NULL,
+  PRIMARY KEY (`recall_project_id`),
+  FOREIGN KEY (`user_id`) REFERENCES users(`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+
 #
 # TABLE STRUCTURE FOR: recalls
 #
@@ -68,10 +82,11 @@ CREATE TABLE `pomodoros` (
 CREATE TABLE `recalls` (
   `recall_id` INT unsigned NOT NULL AUTO_INCREMENT,
   `user_id` varchar(50) NOT NULL,
-  `project_name` varchar(255) NOT NULL,
-  `recall` text,
+  `recall_project_id` INT unsigned NOT NULL,
   `recall_title` varchar(255) NOT NULL,
+  `recall` text,
   PRIMARY KEY (`recall_id`),
-  FOREIGN KEY (`user_id`) REFERENCES users(`user_id`)
+  FOREIGN KEY (`user_id`) REFERENCES users(`user_id`),
+  FOREIGN KEY (`recall_project_id`) REFERENCES recall_projects(`recall_project_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
