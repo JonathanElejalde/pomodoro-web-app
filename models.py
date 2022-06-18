@@ -2,6 +2,7 @@ from datetime import date, datetime
 from enum import Enum
 from typing import Optional, Union
 from uuid import UUID
+from pandas import NA
 
 from pydantic import BaseModel, Field, EmailStr, SecretStr
 
@@ -81,17 +82,40 @@ class PomodoroResponse(PomodoroBase):
     pomodoro_satisfaction: PomSatisfaction
 
 
+# Recall project models
+class RecallProjectBase(BaseModel):
+    project_name: str = NAME
+
+class RecallProject(RecallProjectBase):
+    pass
+
+class RecallProjectResponse(RecallProjectBase):
+    recall_project_id: int = ID
+    project_name: str
+
+
 
 # Recall models
-class Recall(BaseModel):
-    recall_id: int = ID
-    user_id: UUID = Field(...)
+class RecallProjectNames(BaseModel):
     project_name: str = NAME
-    recall: str = Field(...)
+
+class RecallBase(BaseModel):
+    project_name: str = NAME
     recall_title: str = Field(..., max_length=255)
+    recall: str = Field(...)
+    
+
+class Recall(RecallBase):
+    pass
+
+class RecallResponse(RecallBase):
+    recall_id: int = ID
+    
+    
+    
+
 
 # JWT token models
-
 class Token(BaseModel):
     access_token: str
     token_type: str
