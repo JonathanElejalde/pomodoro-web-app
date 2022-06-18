@@ -42,7 +42,7 @@ def select_join_query(
 
 def select_join_on_query(
     from_:Table, join_on:list[tuple[Table, tuple]], 
-    columns:list[Field], condition:tuple = None
+    columns:list[Field], condition:tuple = None, order_by:str = None
     )-> MySQLQuery:
     query = MySQLQuery.from_(from_)
     for table, on_condition in join_on:
@@ -51,7 +51,9 @@ def select_join_on_query(
     query = query.select(*columns)
     if condition:
         query = query.where(condition)
-    query = query.orderby('pomodoro_date', order=Order.desc)
+    
+    if order_by:
+        query = query.orderby(order_by, order=Order.desc)
     return query
     
 

@@ -70,7 +70,7 @@ def get_pomodoro(category_id:int, project_id:int, current_user:ResponseUser = De
         (POMODOROS.user_id == Parameter("%s")) & (POMODOROS.category_id == Parameter("%s")) & (POMODOROS.project_id == Parameter("%s"))
     )
     query = queries.select_join_on_query(
-        POMODOROS, join_on, columns, condition
+        POMODOROS, join_on, columns, condition, 'pomodoro_date'
     )
 
     # Generate values
