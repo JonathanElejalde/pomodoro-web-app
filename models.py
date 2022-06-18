@@ -96,11 +96,8 @@ class RecallProjectResponse(RecallProjectBase):
 
 
 # Recall models
-class RecallProjectNames(BaseModel):
-    project_name: str = NAME
-
 class RecallBase(BaseModel):
-    project_name: str = NAME
+    recall_project_id: int = ID
     recall_title: str = Field(..., max_length=255)
     recall: str = Field(...)
     
@@ -110,7 +107,7 @@ class Recall(RecallBase):
 
 class RecallResponse(RecallBase):
     recall_id: int = ID
-    
+    project_name: str
     
     
 
