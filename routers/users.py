@@ -4,12 +4,15 @@ from tokenize import Token
 from uuid import uuid4
 
 from fastapi import APIRouter, Request, Depends, status, Form, HTTPException
+from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from passlib.context import CryptContext
 from pydantic import EmailStr, SecretStr
 from pypika import Table, Parameter
 
-from credentials import ACCESS_TOKEN_EXPIRE_MINUTES
+from config import settings
 from data import Database
 from models import ResponseUser, Token
 import queries
@@ -30,6 +33,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
     path="/signup", status_code=status.HTTP_201_CREATED, summary="User registration"
 )
 def signup(
+    request: Request,
     email: EmailStr = Form(...),
     first_name: str = Form(..., min_length=1, max_length=255),
     last_name: str = Form(..., min_length=1, max_length=255),
@@ -97,7 +101,7 @@ def login(auth_data: OAuth2PasswordRequestForm = Depends(), request: Request = N
         )
 
     # If user authenticas correctly, create an access token.
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user["email"]}, expires_delta=access_token_expires
     )

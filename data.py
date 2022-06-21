@@ -3,7 +3,7 @@ import mysql.connector as connector
 from mysql.connector import Error
 import pandas as pd
 
-import credentials as credentials
+from config import settings
 
 
 
@@ -17,8 +17,8 @@ class Database:
             conn = connector.connect(
                 host='localhost',
                 database='pomodoros',
-                user=credentials.database_user,
-                password=credentials.database_password
+                user=settings.DATABASE_USER,
+                password=settings.DATABASE_PASSWORD
             )
         except Error as e:
             print(f"Error while connecting to MySQL: {e}")
