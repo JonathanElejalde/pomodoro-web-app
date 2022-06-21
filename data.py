@@ -41,7 +41,7 @@ class Database:
 
         return df
 
-
+DB = Database()
 
 if __name__ == "__main__":
     pass

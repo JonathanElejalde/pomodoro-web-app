@@ -1,11 +1,8 @@
 from fastapi import FastAPI
 
 from config import settings
-from data import Database
 from routers import pomodoros, projects, recall_projects, recalls, users, categories
 
-
-DB = Database()
 
 app = FastAPI(title=settings.PROJECT_NAME, version=settings.PROJECT_VERSION)
 app.include_router(users.router)

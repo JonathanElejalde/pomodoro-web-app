@@ -3,12 +3,11 @@ from fastapi import APIRouter, status, Depends, HTTPException
 from pypika import Tables, Parameter
 
 from models import Pomodoro, PomodoroResponse, ResponseUser, Satisfaction
-from data import Database
+from data import DB
 import queries
-from routers.utils import get_current_user, get_user_id, get_satisfaction_int
+from routers.utils import get_current_user, get_satisfaction_int
 
 # Constants
-DB = Database()
 PROJECTS, CATEGORIES, POMODOROS = Tables('projects', 'categories', 'pomodoros')
 
 
@@ -25,7 +24,7 @@ router = APIRouter(
     summary="Create pomodoro"
 )
 def create_pomodoro(pomodoro:Pomodoro, current_user:ResponseUser = Depends(get_current_user)):
-    user_id = get_user_id()
+    user_id = current_user['user_id']
 
     # Generate query
     columns = [
@@ -55,7 +54,7 @@ def create_pomodoro(pomodoro:Pomodoro, current_user:ResponseUser = Depends(get_c
     summary="Get pomodoros in a project"
 )
 def get_pomodoro(category_id:int, project_id:int, current_user:ResponseUser = Depends(get_current_user)):
-    user_id = get_user_id()
+    user_id = current_user['user_id']
 
     # Generate query
     join_on = [
@@ -96,7 +95,7 @@ def get_pomodoro(category_id:int, project_id:int, current_user:ResponseUser = De
     summary=""
 )
 def get_pomodoro(pomodoro_id:int, satisfaction:Satisfaction, current_user:ResponseUser = Depends(get_current_user)):
-    user_id = get_user_id()
+    user_id = current_user['user_id']
 
     # Generate query
     updates = (POMODOROS.pomodoro_satisfaction, Parameter('%s'))

@@ -2,12 +2,11 @@ from fastapi import APIRouter, status, Depends, HTTPException, Form, Path
 from pypika import Table, Parameter
 
 from models import RecallProject, RecallProjectResponse, ResponseUser
-from data import Database
+from data import DB
 import queries
-from routers.utils import get_current_user, get_user_id, delete_message
+from routers.utils import get_current_user, delete_message
 
 # Constants
-DB = Database()
 RECALL_PROJECTS = Table('recall_projects')
 
 router = APIRouter(
@@ -26,7 +25,7 @@ def create_recall(
     current_user:ResponseUser = Depends(get_current_user)
     ):
 
-    user_id = get_user_id()
+    user_id = current_user['user_id']
 
      # Generate query
     columns = [RECALL_PROJECTS.user_id, RECALL_PROJECTS.project_name]
@@ -49,7 +48,7 @@ def create_recall(
     summary="Get recall project names"
 )
 def get_recall_project_names(current_user:ResponseUser = Depends(get_current_user)):
-    user_id = get_user_id()
+    user_id = current_user['user_id']
 
     # Generate query
     columns = [RECALL_PROJECTS.recall_project_id, RECALL_PROJECTS.project_name]
@@ -80,7 +79,7 @@ def get_recall_project_names(
     recall_project_id:int, project_name: str, 
     current_user:ResponseUser = Depends(get_current_user)):
     
-    user_id = get_user_id()
+    user_id = current_user['user_id']
 
     # Generate query
     updates = (RECALL_PROJECTS.project_name, Parameter('%s'))
@@ -110,7 +109,7 @@ def get_recall_project_names(
     recall_project_id:int,
     current_user:ResponseUser = Depends(get_current_user)):
 
-    user_id = get_user_id()
+    user_id = current_user['user_id']
 
     # Generate query
     condition = (

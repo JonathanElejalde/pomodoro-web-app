@@ -4,12 +4,11 @@ from fastapi import APIRouter, status, Depends, HTTPException
 from pypika import Tables, Parameter
 
 from models import Project, ProjectResponse, ResponseUser
-from data import Database
+from data import DB
 import queries
-from routers.utils import get_current_user, get_user_id, delete_message
+from routers.utils import get_current_user, delete_message
 
 # Constants
-DB = Database()
 PROJECTS, CATEGORIES = Tables('projects', 'categories')
 
 
@@ -26,7 +25,7 @@ router = APIRouter(
     summary="Create project"
 )
 def create_project(project:Project, current_user:ResponseUser = Depends(get_current_user)):
-    user_id = get_user_id()
+    user_id = current_user['user_id']
 
     # Generate query
     columns = [
@@ -52,7 +51,7 @@ def create_project(project:Project, current_user:ResponseUser = Depends(get_curr
     summary="Get projects"
 )
 def get_projects(category_id:int, current_user:ResponseUser = Depends(get_current_user)):
-    user_id = get_user_id()
+    user_id = current_user['user_id']
 
     # Generate query
     on_fields = ('category_id', 'user_id')
@@ -89,7 +88,7 @@ def get_projects(category_id:int, current_user:ResponseUser = Depends(get_curren
     summary="Get project"
 )
 def get_project(project_id:int, current_user:ResponseUser = Depends(get_current_user)):
-    user_id = get_user_id()
+    user_id = current_user['user_id']
 
     # Generate query
     on_fields = ('category_id', 'user_id')
@@ -126,7 +125,7 @@ def get_project(project_id:int, current_user:ResponseUser = Depends(get_current_
     summary="Finish a project"
 )
 def update_project(project_id:int, current_user:ResponseUser = Depends(get_current_user)):
-    user_id = get_user_id()
+    user_id = current_user['user_id']
 
     # Generate query
     updates = (PROJECTS.end, Parameter('%s'))
@@ -152,7 +151,7 @@ def update_project(project_id:int, current_user:ResponseUser = Depends(get_curre
     summary="Cancel a project"
 )
 def update_project(project_id:int, current_user:ResponseUser = Depends(get_current_user)):
-    user_id = get_user_id()
+    user_id = current_user['user_id']
 
     # Generate query
     updates = (PROJECTS.canceled, Parameter('%s'))
@@ -179,7 +178,7 @@ def update_project(project_id:int, current_user:ResponseUser = Depends(get_curre
     summary="Cancel a project"
 )
 def update_project(project_id:int, new_project_name:str, current_user:ResponseUser = Depends(get_current_user)):
-    user_id = get_user_id()
+    user_id = current_user['user_id']
 
     # Generate query
     updates = (PROJECTS.project_name, Parameter('%s'))
@@ -205,7 +204,7 @@ def update_project(project_id:int, new_project_name:str, current_user:ResponseUs
     summary="Delete project"
 )
 def delete_project(project_id:int, current_user:ResponseUser = Depends(get_current_user)):
-    user_id = get_user_id()
+    user_id = current_user['user_id']
 
     # Generate query
     condition = (

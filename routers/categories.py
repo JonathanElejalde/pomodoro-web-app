@@ -5,12 +5,11 @@ from fastapi import APIRouter, status, Depends, HTTPException
 from pypika import Table, MySQLQuery, Parameter
 
 from models import Category, CategoryResponse, ResponseUser
-from data import Database
+from data import DB
 import queries
-from routers.utils import delete_message, get_current_user, get_user_id, delete_message
+from routers.utils import delete_message, get_current_user, delete_message
 
 # Constants
-DB = Database()
 CATEGORIES = Table('categories')
 
 router = APIRouter(
@@ -24,7 +23,7 @@ router = APIRouter(
     summary="Category creation"
 )
 def create_category(category:Category, current_user:ResponseUser = Depends(get_current_user)):
-    user_id = get_user_id()
+    user_id = current_user['user_id']
 
     # Generate query
     columns = [
@@ -43,7 +42,7 @@ def create_category(category:Category, current_user:ResponseUser = Depends(get_c
     summary="Get categories"
 )
 def get_categories(current_user:ResponseUser = Depends(get_current_user)):
-    user_id = get_user_id()
+    user_id = current_user['user_id']
 
     # Generate query
     columns = [CATEGORIES.category_id, CATEGORIES.category_name]
@@ -62,7 +61,7 @@ def get_categories(current_user:ResponseUser = Depends(get_current_user)):
 )
 
 def get_category(category_id:int, current_user:ResponseUser = Depends(get_current_user)):
-    user_id = get_user_id()
+    user_id = current_user['user_id']
 
     # Generate query
     columns = [CATEGORIES.category_id, CATEGORIES.category_name]

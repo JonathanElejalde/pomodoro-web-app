@@ -1,3 +1,4 @@
+from curses.ascii import US
 from datetime import datetime, timedelta
 import os
 from typing import Union
@@ -5,17 +6,16 @@ from typing import Union
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
+from pandas import DataFrame
 from passlib.context import CryptContext
+from pypika import Table, Parameter
 
 from config import settings
-from models import TokenData
+from data import DB
+from models import TokenData, ResponseUser
+import queries
 
 # General utils
-
-def get_user_id():
-    user_id = os.getenv('USER_ID')
-
-    return user_id
 
 def delete_message(db):
     if db.cursor.rowcount > 0:
@@ -30,10 +30,25 @@ def delete_message(db):
 # User utils
 
 PWD_CXT = CryptContext(schemes=['bcrypt'], deprecated='auto')
+USERS = Table("users")
 
 def verify_password(plain_pass, hashed_pass):
     return PWD_CXT.verify(plain_pass, hashed_pass)
 
+
+def select_user(email:str)-> DataFrame:
+
+    # Generate query
+    columns = [
+        USERS.user_id, USERS.email, USERS.first_name,
+        USERS.last_name, USERS.birth_date
+    ]
+    condition = (USERS.email == Parameter("%s"))
+    query = queries.select_query(USERS, columns, condition)
+    values = (email, )
+    user = DB.pandas_query(query.get_sql(), values)
+
+    return user
 
 # Pomodoros utils
 
@@ -75,18 +90,23 @@ def verify_token(token, credentials_exception):
         email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
-        token_data = TokenData(username=email)
+
     except JWTError:
         raise credentials_exception
     
-    return token_data
+    return email
 
-def get_current_user(token:str = Depends(oauth2_scheme)):
+def get_current_user(token:str = Depends(oauth2_scheme)) -> ResponseUser:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    token_data = verify_token(token, credentials_exception)
-    return token_data
+    email = verify_token(token, credentials_exception)
+    user = select_user(email)
+
+    if user.empty:
+        raise credentials_exception
+
+    return user.to_dict('records')[0]

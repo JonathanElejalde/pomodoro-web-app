@@ -2,12 +2,11 @@ from fastapi import APIRouter, status, Depends, HTTPException, Form
 from pypika import Tables, Parameter
 
 from models import Recall, RecallResponse, ResponseUser
-from data import Database
+from data import DB
 import queries
-from routers.utils import get_current_user, get_user_id, delete_message
+from routers.utils import get_current_user, delete_message
 
 # Constants
-DB = Database()
 RECALLS, RECALL_PROJECTS = Tables('recalls', "recall_projects")
 NORMAL_FORM = Form(..., max_length=255, min_length=1, example="Test")
 
@@ -25,7 +24,7 @@ router = APIRouter(
 def create_recall(request: Recall, current_user:ResponseUser = Depends(get_current_user)
     ):
 
-    user_id = get_user_id()
+    user_id = current_user['user_id']
 
      # Generate query
     columns = [
@@ -51,7 +50,7 @@ def create_recall(request: Recall, current_user:ResponseUser = Depends(get_curre
     summary="Get recalls in a recall project"
 )
 def get_recall(project_id: int, current_user:ResponseUser = Depends(get_current_user)):
-    user_id = get_user_id()
+    user_id = current_user['user_id']
 
     # Generate query
     join_on = [
@@ -92,7 +91,7 @@ def update_recalls(
     recall_id:int, recall_title:str = None,
     recall:str = None, current_user:ResponseUser = Depends(get_current_user)
     ):
-    user_id = get_user_id()
+    user_id = current_user['user_id']
 
     # Generate query
     updates = []
@@ -133,7 +132,7 @@ def update_recalls(
     summary="Delete a recall"
 )
 def delete_recalls(recall_id:int, current_user:ResponseUser = Depends(get_current_user)):
-    user_id = get_user_id()
+    user_id = current_user['user_id']
     
     # Generate query
     condition = (
@@ -161,7 +160,7 @@ def delete_recalls(recall_id:int, current_user:ResponseUser = Depends(get_curren
     summary="Delete all the recalls in a recall project"
 )
 def delete_recall(recall_project_id:int, current_user:ResponseUser = Depends(get_current_user)):
-    user_id = get_user_id()
+    user_id = current_user['user_id']
     
     # Generate query
     condition = (

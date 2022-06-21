@@ -13,14 +13,13 @@ from pydantic import EmailStr, SecretStr
 from pypika import Table, Parameter
 
 from config import settings
-from data import Database
+from data import DB
 from models import ResponseUser, Token
 import queries
-from routers.utils import verify_password, create_access_token, get_user_id, get_current_user, delete_message
+from routers.utils import verify_password, create_access_token, get_current_user, delete_message
 
 # Constants
 PWD_CXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
-DB = Database()
 USERS = Table("users")
 
 
@@ -106,9 +105,6 @@ def login(auth_data: OAuth2PasswordRequestForm = Depends(), request: Request = N
         data={"sub": user["email"]}, expires_delta=access_token_expires
     )
 
-    # Save user_id in environment
-    os.environ["USER_ID"] = user["user_id"]
-
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -119,7 +115,7 @@ def login(auth_data: OAuth2PasswordRequestForm = Depends(), request: Request = N
     tags=["Users"],
 )
 def delete_user(current_user: ResponseUser = Depends(get_current_user)):
-    user_id = get_user_id()
+    user_id = current_user['user_id']
     
     # Generate query
     delete_condition = (USERS.user_id == Parameter("%s"))
