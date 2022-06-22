@@ -5,7 +5,7 @@ from pypika import Tables, Parameter
 from models import Pomodoro, PomodoroResponse, ResponseUser, Satisfaction
 from data import DB
 import queries
-from routers.utils import get_current_user, get_satisfaction_int
+from utils import get_current_user, get_satisfaction_int
 
 # Constants
 PROJECTS, CATEGORIES, POMODOROS = Tables('projects', 'categories', 'pomodoros')

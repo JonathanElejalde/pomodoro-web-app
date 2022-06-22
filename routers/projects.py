@@ -6,7 +6,7 @@ from pypika import Tables, Parameter
 from models import Project, ProjectResponse, ResponseUser
 from data import DB
 import queries
-from routers.utils import get_current_user, delete_message
+from utils import get_current_user, delete_message
 
 # Constants
 PROJECTS, CATEGORIES = Tables('projects', 'categories')

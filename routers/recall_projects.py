@@ -4,7 +4,7 @@ from pypika import Table, Parameter
 from models import RecallProject, RecallProjectResponse, ResponseUser
 from data import DB
 import queries
-from routers.utils import get_current_user, delete_message
+from utils import get_current_user, delete_message
 
 # Constants
 RECALL_PROJECTS = Table('recall_projects')

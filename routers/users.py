@@ -1,13 +1,13 @@
 from datetime import date, timedelta
-import os
 from tokenize import Token
 from uuid import uuid4
 
 from fastapi import APIRouter, Request, Depends, status, Form, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from mysql.connector.errors import IntegrityError
 from passlib.context import CryptContext
 from pydantic import EmailStr, SecretStr
 from pypika import Table, Parameter
@@ -16,16 +16,23 @@ from config import settings
 from data import DB
 from models import ResponseUser, Token
 import queries
-from routers.utils import verify_password, create_access_token, get_current_user, delete_message
+from utils import verify_password, create_access_token, get_current_user, delete_message
 
 # Constants
 PWD_CXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
 USERS = Table("users")
 
-
+templates = Jinja2Templates(directory="templates")
 router = APIRouter(prefix="/users", tags=["Users"])
 
 # User paths
+
+@router.get(
+    path="/signup", summary="User registration"
+)
+def register(request: Request):
+    return templates.TemplateResponse("users/signup.html", {"request": request})
+
 
 
 @router.post(
@@ -49,19 +56,16 @@ def signup(
         USERS.first_name, USERS.last_name, USERS.birth_date,
     ]
 
+    print(values)
     query = queries.insert_query(USERS, columns)
-    DB.execute_query(query.get_sql(), values)
-
-    return {
-        "Detail": "User created",
-        "User Data": {
-            "user_id": user_id,
-            "email": email,
-            "first_name": first_name,
-            "last_name": last_name,
-            "birth_date": birth_date
-        }
-        }
+    try:
+        DB.execute_query(query.get_sql(), values)
+        return RedirectResponse(
+                "/?msg=Successfully-Registered", status_code=status.HTTP_302_FOUND
+            ) 
+    except IntegrityError:
+        errors = ["User already in database"]
+        return templates.TemplateResponse("users/signup.html", context={"request": request, "errors": errors})
 
 
 @router.post(

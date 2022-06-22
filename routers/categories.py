@@ -7,7 +7,7 @@ from pypika import Table, MySQLQuery, Parameter
 from models import Category, CategoryResponse, ResponseUser
 from data import DB
 import queries
-from routers.utils import delete_message, get_current_user, delete_message
+from utils import delete_message, get_current_user, delete_message
 
 # Constants
 CATEGORIES = Table('categories')
