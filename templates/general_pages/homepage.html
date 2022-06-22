@@ -1,0 +1,15 @@
+{% extends "shared/base.html" %}
+
+
+{% block title %}
+  <title>Pomodoros</title>
+{% endblock %}
+
+{% block content %}
+
+<!-- New with statement to show alert -->
+  {% with msg=msg %}    
+    {% include "components/alerts.html" %}
+  {% endwith %}
+
+{% endblock %}

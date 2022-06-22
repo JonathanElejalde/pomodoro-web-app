@@ -10,6 +10,7 @@ from pandas import DataFrame
 from passlib.context import CryptContext
 from pypika import Table, Parameter
 
+from authentication import OAuth2PasswordBearerWithCookie
 from config import settings
 from data import DB
 from models import TokenData, ResponseUser
@@ -69,7 +70,9 @@ def get_satisfaction_int(satisfaction):
     
 
 # JWT token
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
+#oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
+oauth2_scheme = OAuth2PasswordBearerWithCookie(tokenUrl="users/login")
+
 
 def create_access_token(
     data: dict, expires_delta:Union[timedelta, None] = None

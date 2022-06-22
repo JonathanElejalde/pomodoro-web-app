@@ -2,7 +2,7 @@ from datetime import date, timedelta
 from tokenize import Token
 from uuid import uuid4
 
-from fastapi import APIRouter, Request, Depends, status, Form, HTTPException
+from fastapi import APIRouter, Request, Depends, status, Form, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
@@ -56,7 +56,6 @@ def signup(
         USERS.first_name, USERS.last_name, USERS.birth_date,
     ]
 
-    print(values)
     query = queries.insert_query(USERS, columns)
     try:
         DB.execute_query(query.get_sql(), values)
@@ -68,14 +67,22 @@ def signup(
         return templates.TemplateResponse("users/signup.html", context={"request": request, "errors": errors})
 
 
+@router.get(
+    path="/login",
+    summary="User login"
+)
+def login(request: Request):
+    return templates.TemplateResponse("auth/login.html", {"request": request})
+
 @router.post(
     path="/login",
     response_model=Token,
     status_code=status.HTTP_200_OK,
     summary="User login",
 )
-def login(auth_data: OAuth2PasswordRequestForm = Depends(), request: Request = None):
+def login(response: Response, request: Request, auth_data: OAuth2PasswordRequestForm = Depends()):
     # Get email and password from request
+    errors = []
     email = auth_data.username
     password = auth_data.password
     
@@ -93,23 +100,24 @@ def login(auth_data: OAuth2PasswordRequestForm = Depends(), request: Request = N
     # Get user that matches email
     user = DB.pandas_query(query.get_sql(), values)
     if user.empty:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Email does not exists"
-        )
+        errors.append("Email does not exists")
+        return templates.TemplateResponse("auth/login.html", context={"request": request, "errors": errors})
+
     user = user.to_dict("records")[0]
     # Confirm password
     if not verify_password(password, user["password"]):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Password is incorrect"
-        )
+        errors.append("Wrong password")
+        return templates.TemplateResponse("auth/login.html", context={"request": request, "errors": errors})
 
     # If user authenticas correctly, create an access token.
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user["email"]}, expires_delta=access_token_expires
     )
+    # Set HttpOnly cookie in response
+    response.set_cookie(key="access_token",value=f"Bearer {access_token}", httponly=True)
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    return templates.TemplateResponse("auth/login.html", context={"request": request, "msg": "Login Successful!"})
 
 
 @router.delete(
