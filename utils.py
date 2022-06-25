@@ -71,7 +71,7 @@ def get_satisfaction_int(satisfaction):
 
 # JWT token
 #oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
-oauth2_scheme = OAuth2PasswordBearerWithCookie(tokenUrl="users/login")
+oauth2_scheme = OAuth2PasswordBearerWithCookie(tokenUrl="users/token")
 
 
 def create_access_token(

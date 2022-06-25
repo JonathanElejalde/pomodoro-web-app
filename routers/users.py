@@ -74,13 +74,14 @@ def signup(
 def login(request: Request):
     return templates.TemplateResponse("auth/login.html", {"request": request})
 
+
 @router.post(
-    path="/login",
-    response_model=Token,
+    path="/token",
     status_code=status.HTTP_200_OK,
     summary="User login",
+    response_model=Token
 )
-def login(response: Response, request: Request, auth_data: OAuth2PasswordRequestForm = Depends()):
+def login_for_token(response: Response, request: Request, auth_data: OAuth2PasswordRequestForm = Depends()):
     # Get email and password from request
     errors = []
     email = auth_data.username
@@ -117,7 +118,19 @@ def login(response: Response, request: Request, auth_data: OAuth2PasswordRequest
     # Set HttpOnly cookie in response
     response.set_cookie(key="access_token",value=f"Bearer {access_token}", httponly=True)
 
+    #return templates.TemplateResponse("auth/login.html", context={"request": request, "msg": "Login Successful!"})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post(
+    path="/login",
+    status_code=status.HTTP_200_OK,
+    summary="User login",
+)
+def login(response: Response, request: Request, auth_data: OAuth2PasswordRequestForm = Depends()):
+
+    login_for_token(response, request, auth_data)
     return templates.TemplateResponse("auth/login.html", context={"request": request, "msg": "Login Successful!"})
+
 
 
 @router.delete(
@@ -139,41 +152,3 @@ def delete_user(current_user: ResponseUser = Depends(get_current_user)):
 
     return {"Detail": message}
 
-
-# ADMIN ENDPOINT
-
-# @router.get(
-#     path="/",
-#     response_model=list[ResponseUser],
-#     status_code=status.HTTP_200_OK,
-#     summary="Get all users",
-# )
-# def get_users():
-#     users = Table("users")
-#     query = MySQLQuery.from_(users).select(
-#         users.user_id, users.email, users.first_name, users.last_name, users.birth_date
-#     )
-#     df = DB.pandas_query(query.get_sql())
-#     return df.to_dict("records")
-
-# ADMIN ENDPOINT
-
-# @router.get(
-#     path="/{user_id}",
-#     response_model=ResponseUser,
-#     status_code=status.HTTP_200_OK,
-#     summary="Get specific user information",
-# )
-# def get_user():
-#     pass
-
-# Admin endpoint
-
-# @router.delete(
-#     path="/{user_id}",
-#     status_code=status.HTTP_200_OK,
-#     summary="Delete user by id",
-#     tags=["Users"],
-# )
-# def delete_user(user_id):
-#      pass
