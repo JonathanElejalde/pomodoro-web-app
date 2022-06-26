@@ -1,7 +1,8 @@
-from fastapi import APIRouter, status, Depends, HTTPException, Form
+from fastapi import APIRouter, status, Depends, HTTPException, Form, Request
+from fastapi.templating import Jinja2Templates
 from pypika import Tables, Parameter
 
-from models import Recall, RecallResponse, ResponseUser
+from models import RecallResponse, ResponseUser
 from data import DB
 import queries
 from utils import get_current_user, delete_message
@@ -10,18 +11,34 @@ from utils import get_current_user, delete_message
 RECALLS, RECALL_PROJECTS = Tables('recalls', "recall_projects")
 NORMAL_FORM = Form(..., max_length=255, min_length=1, example="Test")
 
+templates = Jinja2Templates(directory="templates")
+
 router = APIRouter(
     prefix='/recalls',
     tags=["Recalls"]
 )
 
+
 # Recall paths
+@router.get(
+    path="/create-recall",
+    summary="Recall creation"
+)
+def create_recall(request: Request):
+    return templates.TemplateResponse("general_pages/create_recall.html", {"request": request})
+
+
 @router.post(
-    path="/",
+    path="/create-recall",
     status_code=status.HTTP_201_CREATED,
     summary="Recall creation"
 )
-def create_recall(request: Recall, current_user:ResponseUser = Depends(get_current_user)
+def create_recall(
+    request: Request,
+    recall_project_id: int = Form(...),
+    recall_title: str = Form(..., min_length=1, max_length=255),
+    recall: str = Form(..., min_length=1),
+    current_user:ResponseUser = Depends(get_current_user)
     ):
 
     user_id = current_user['user_id']
@@ -34,12 +51,12 @@ def create_recall(request: Recall, current_user:ResponseUser = Depends(get_curre
     query = queries.insert_query(RECALLS, columns)
 
     # Generate values
-    values = (user_id, request.recall_project_id, request.recall_title, request.recall)
+    values = (user_id, recall_project_id, recall_title, recall)
 
     # Execute query
     DB.execute_query(query.get_sql(), values)
 
-    return {"details": f"New recall added"}
+    return templates.TemplateResponse("general_pages/create_recall.html", {"request": request})
 
 
 
