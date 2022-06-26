@@ -28,7 +28,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
 # User paths
 
 @router.get(
-    path="/signup", summary="User registration"
+    path="/signup", summary="User registration", include_in_schema=False
 )
 def register(request: Request):
     return templates.TemplateResponse("users/signup.html", {"request": request})
@@ -69,7 +69,8 @@ def signup(
 
 @router.get(
     path="/login",
-    summary="User login"
+    summary="User login",
+    include_in_schema=False
 )
 def login(request: Request):
     return templates.TemplateResponse("auth/login.html", {"request": request})
@@ -79,7 +80,8 @@ def login(request: Request):
     path="/token",
     status_code=status.HTTP_200_OK,
     summary="User login",
-    response_model=Token
+    response_model=Token,
+    include_in_schema=False
 )
 def login_for_token(response: Response, request: Request, auth_data: OAuth2PasswordRequestForm = Depends()):
     # Get email and password from request
