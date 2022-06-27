@@ -1,0 +1,56 @@
+{% extends "shared/base.html" %}
+
+{% block title %}
+  <title>Recall Projects</title>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+<div id="errors" class="text-danger font-weight-bold">
+    {% for error in errors %}
+    <li>{{error}}</li>
+    {% endfor %}
+</div>
+</div>
+
+
+<h1 style="text-align: center;">Recall Projects</h1>
+
+<form hx-post="/recall_projects" hx-target="#projects-list" hx-swap="afterbegin">
+    <div class="mb-3">
+      <label>Create a new Project</label>
+      <input id="new-project" type="text" name="project_name" class="form-control" required>
+      <button id="new-project-btn" type="submit" class="btn btn-primary">Create</button>
+    </div>
+</form>
+
+
+<br/>
+<div class="mb-3">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Project Name</th>
+                <th scope="col">Delete</th>
+            </tr>
+        </thead>
+        <tbody id="projects-list">
+
+            {% for project in projects %}
+
+                <tr scope="row">
+                    <td> {{ project.get('project_name') }}</td>
+                    <td> <button 
+                            class="btn btn-danger" 
+                            hx-delete="/recall_projects/?recall_project_id={{ project.get('recall_project_id') }}"
+                            hx-confirm="Are you sure?"
+                            hx-target="closest tr"
+                            hx-swap="outerHTML"
+                            >Delete</button></td>
+                </tr>
+                
+            {% endfor %}
+        </tbody>     
+    </table>
+</div>
+{% endblock %}

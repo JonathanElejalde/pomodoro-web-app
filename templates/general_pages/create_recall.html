@@ -17,19 +17,33 @@
 
     <div class="row my-5">
       <h3 class="text-center display-4">Create a Recall</h3>
+      
+      <form method="POST" hx-post="/recall_projects" hx-target="#new-project">
+        <div class="mb-3">
+          <label>Add a new recall project</label>
+          <input id="new-project" type="text" placeholder="Recall project name" name="project_name" class="form-control">
+          <button id="new-project-btn" type="submit" class="btn btn-primary">Create</button>
+        </div>
+
+      </form>
+
+      
+
       <form method="POST">
+
         <div class="mb-3">
           <!-- Getting the recall projects -->
+          <label for="recall_project_id">Choose an existing recall project</label>
           <div hx-get="/recall_projects" hx-trigger="load delay:0.2s" hx-swap="outerHTML"></div>
         </div>
 
         <div class="mb-3">
-          <input type="text" required placeholder="Recall title" name="recall_title" value="{{recall_title}}" class="form-control">
+          <input type="text" required placeholder="Recall title" name="recall_title" class="form-control">
         </div>
 
         <div class="mb-3">
           <label for="recall" class="form-label">Add recall</label>
-          <textarea class="form-control" required name="recall" id="recall" rows="5">{{recall}}</textarea>
+          <textarea class="form-control" required name="recall" id="recall" rows="5"></textarea>
           <div id="help" class="form-text">Please, enter your recall here</div>
         </div>
 
@@ -38,4 +52,4 @@
       </form>
     </div>
   </div>
-  {% endblock %}
+{% endblock %}
