@@ -3,24 +3,21 @@ from tokenize import Token
 from uuid import uuid4
 
 from fastapi import APIRouter, Request, Depends, status, Form, Response
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from mysql.connector.errors import IntegrityError
 from passlib.context import CryptContext
 from pydantic import EmailStr, SecretStr
-from pypika import Table, Parameter
 
 from config import settings
 from data import DB
 from models import ResponseUser, Token
-import queries
-from utils import verify_password, create_access_token, get_current_user, delete_message
+import query as q
+from utils import verify_password, create_access_token, get_current_user
 
 # Constants
 PWD_CXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
-USERS = Table("users")
 
 templates = Jinja2Templates(directory="templates")
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -51,14 +48,10 @@ def signup(
     user_id = uuid4()
     values = (str(user_id), email, hashed_passw, first_name, last_name, birth_date)
 
-    columns = [
-        USERS.user_id, USERS.email, USERS.password,
-        USERS.first_name, USERS.last_name, USERS.birth_date,
-    ]
+    query = q.signup_user()
 
-    query = queries.insert_query(USERS, columns)
     try:
-        DB.execute_query(query.get_sql(), values)
+        DB.execute_query(query, values)
         return RedirectResponse(
                 "/?msg=Successfully-Registered", status_code=status.HTTP_302_FOUND
             ) 
@@ -88,20 +81,10 @@ def login_for_token(response: Response, request: Request, auth_data: OAuth2Passw
     errors = []
     email = auth_data.username
     password = auth_data.password
-    
-    # Generate query
-    columns = [
-        USERS.user_id, USERS.email, USERS.first_name,
-        USERS.last_name, USERS.birth_date, USERS.password,
-    ]
-    condition = (USERS.email == Parameter("%s"))
-    query = queries.select_query(USERS, columns, condition)
-
-    # Create values
     values = (email,)
 
-    # Get user that matches email
-    user = DB.pandas_query(query.get_sql(), values)
+    user = q.login_user(values)
+
     if user.empty:
         errors.append("Email does not exists")
         return templates.TemplateResponse("auth/login.html", context={"request": request, "errors": errors})
@@ -143,14 +126,10 @@ def login(response: Response, request: Request, auth_data: OAuth2PasswordRequest
 )
 def delete_user(current_user: ResponseUser = Depends(get_current_user)):
     user_id = current_user['user_id']
-    
-    # Generate query
-    delete_condition = (USERS.user_id == Parameter("%s"))
-    query = queries.delete_query(USERS, delete_condition)
     values = (user_id,)
+    query = q.delete_user()
 
-    DB.execute_query(query.get_sql(), values)
-    message = delete_message(DB)
+    DB.execute_query(query, values)
 
-    return {"Detail": message}
+    return {"Detail": "User {user_id} was deleted"}
 
