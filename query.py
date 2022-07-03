@@ -22,7 +22,7 @@ def login_user(values:tuple)-> DataFrame:
         USERS.user_id, USERS.email, USERS.first_name,
         USERS.last_name, USERS.birth_date, USERS.password,
     ]
-    condition = (USERS.email == Parameter("%s"))
+    condition = [USERS.email == Parameter("%s")]
     query = queries.select_query(USERS, columns, condition)
 
     # Get user that matches email
@@ -46,24 +46,19 @@ def create_category()-> str:
 
     return query.get_sql()
 
-def get_categories(values:tuple)->DataFrame:
+def get_categories(values:tuple, category_id:int = None)->DataFrame:
     columns = [CATEGORIES.category_id, CATEGORIES.category_name]
-    condition = (CATEGORIES.user_id == Parameter("%s"))
-    query = queries.select_query(CATEGORIES, columns, condition)
-    df = DB.pandas_query(query.get_sql(), values)
+    condition = [CATEGORIES.user_id == Parameter("%s")]
 
-    return df
+    if category_id:
+        condition.append(CATEGORIES.category_id == Parameter("%s"))
 
-def get_category(values:tuple)-> DataFrame:
-    columns = [CATEGORIES.category_id, CATEGORIES.category_name]
-    condition = (CATEGORIES.user_id == Parameter("%s")) & (CATEGORIES.category_id == Parameter("%s"))
-    query = queries.select_query(CATEGORIES, columns, condition)
+    query = queries.select_query(CATEGORIES, columns, condition, criterion='all')
     df = DB.pandas_query(query.get_sql(), values)
 
     return df
 
 def update_category()->str:
-    # Generate query
     updates = (CATEGORIES.category_name, Parameter('%s'))
     condition = (
         (CATEGORIES.category_id == Parameter("%s")) & (CATEGORIES.user_id == Parameter("%s"))
@@ -72,10 +67,61 @@ def update_category()->str:
     
     return query.get_sql()
 
-def delete_category()->str:
+def delete_category()-> str:
     condition = (
         (CATEGORIES.category_id == Parameter('%s')) & (CATEGORIES.user_id == Parameter("%s"))
     )
     query = queries.delete_query(CATEGORIES, condition)
 
     return query.get_sql()
+
+# Projects
+def create_project()-> str:
+    columns = [
+        PROJECTS.user_id, PROJECTS.category_id, 
+        PROJECTS.project_name, PROJECTS.start
+    ]
+    query = queries.insert_query(PROJECTS, columns)
+
+    return query.get_sql()
+
+def get_projects(values:tuple, project_id:int = None)-> DataFrame:
+    on_fields = ('category_id', 'user_id')
+    columns = [
+        PROJECTS.project_id, PROJECTS.category_id,
+        CATEGORIES.category_name, PROJECTS.project_name,
+        PROJECTS.start, PROJECTS.end, PROJECTS.canceled
+    ]
+    condition = [
+        PROJECTS.user_id == Parameter('%s'), PROJECTS.category_id == Parameter('%s')
+    ]
+    if project_id:
+        condition.append(PROJECTS.project_id == Parameter('%s'))
+
+    query = queries.select_join_query(
+        PROJECTS, CATEGORIES, on_fields,
+        columns, condition, criterion='all'
+    )
+    # Execute query
+    df = DB.pandas_query(query.get_sql(), values)
+
+    return df
+
+def update_project(column)-> str:
+    updates = (PROJECTS[column], Parameter("%s"))
+    condition = (
+        (PROJECTS.category_id == Parameter("%s")) & (PROJECTS.project_id == Parameter("%s")) & (PROJECTS.user_id == Parameter('%s'))
+    )
+    query = queries.update_query(PROJECTS, updates, condition)
+
+    return query.get_sql()
+
+def delete_project()-> str:
+    condition = (
+        (PROJECTS.category_id == Parameter("%s")) & (PROJECTS.project_id == Parameter('%s')) & (PROJECTS.user_id == Parameter('%s'))
+    )
+    query = queries.delete_query(PROJECTS, condition)
+
+    return query.get_sql()
+    
+    

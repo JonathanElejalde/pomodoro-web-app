@@ -1,6 +1,12 @@
 from typing import Union
 
-from pypika import Table, MySQLQuery, Parameter, Field, Order
+from pypika import Table, MySQLQuery, Parameter, Field, Order, Criterion
+
+# Constants
+CRITERION = {
+    'all': Criterion.all,
+    'any': Criterion.any,
+}
 
 
 def create_placeholders(amount:int)-> list[Parameter]:
@@ -14,20 +20,28 @@ def insert_query(table:Table, columns:list[Field])-> MySQLQuery:
     
     return query
 
-def select_query(table:Table, columns:list[Field], condition:tuple = None, distinct:bool = False)-> MySQLQuery:
+def select_query(
+    table:Table, columns:list[Field], condition:list = None, 
+    distinct:bool = False, criterion:str = 'all',
+    )-> MySQLQuery:
     query = MySQLQuery.from_(table).select(*columns)
 
     if distinct:
         query = query.distinct()
 
     if condition:
-        query = query.where(condition)
+        # Check Criterion in pypika to understand
+        criterion = CRITERION[criterion]
+        query = query.where(
+            criterion(condition)
+        )
 
     return query
 
 def select_join_query(
     from_:Table, join:Table, on_fields:tuple[str],
-    columns:list[Field], condition:tuple = None
+    columns:list[Field], condition:tuple = None,
+    criterion: str = 'all'
     )-> MySQLQuery:
     query =  MySQLQuery \
         .from_(from_) \
@@ -36,7 +50,11 @@ def select_join_query(
         .select(*columns)
 
     if condition:
-        query = query.where(condition)
+        # Check Criterion in pypika to understand
+        criterion = CRITERION[criterion]
+        query = query.where(
+            criterion(condition)
+        )
 
     return query
 

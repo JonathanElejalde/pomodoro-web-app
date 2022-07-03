@@ -44,7 +44,7 @@ def select_user(email:str)-> DataFrame:
         USERS.user_id, USERS.email, USERS.first_name,
         USERS.last_name, USERS.birth_date
     ]
-    condition = (USERS.email == Parameter("%s"))
+    condition = [USERS.email == Parameter("%s")]
     query = queries.select_query(USERS, columns, condition)
     values = (email, )
     user = DB.pandas_query(query.get_sql(), values)

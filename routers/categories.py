@@ -49,7 +49,7 @@ def get_categories(current_user:ResponseUser = Depends(get_current_user)):
 def get_category(category_id:int, current_user:ResponseUser = Depends(get_current_user)):
     user_id = current_user['user_id']
     values = (user_id, category_id)
-    df = q.get_category(values)
+    df = q.get_categories(values, category_id)
 
     if df.empty:
         raise HTTPException(
