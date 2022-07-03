@@ -21,7 +21,7 @@ router = APIRouter(
 
 # Recall paths
 @router.get(
-    path="/create-recall",
+    path="/create_recall",
     summary="Recall creation"
 )
 def create_recall(request: Request):
@@ -29,7 +29,7 @@ def create_recall(request: Request):
 
 
 @router.post(
-    path="/create-recall",
+    path="/create_recall",
     status_code=status.HTTP_201_CREATED,
     summary="Recall creation"
 )
