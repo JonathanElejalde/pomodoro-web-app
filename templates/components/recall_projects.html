@@ -1,4 +1,4 @@
-<select name="recall_project_id">
+<select id="recall-projects" name="recall_project_id">
     {% for project in projects %}
         <option name="recall_project_id" value="{{project.get('recall_project_id')}}">{{project.get('project_name')}}</option>
     {% endfor %}
