@@ -16,15 +16,6 @@
 
 <h1 style="text-align: center;">Recall Projects</h1>
 
-<form hx-post="/recall_projects" hx-target="#projects-list" hx-swap="afterbegin">
-    <div class="mb-3">
-      <label>Create a new Project</label>
-      <input id="new-project" type="text" name="project_name" class="form-control" required>
-      <button id="new-project-btn" type="submit" class="btn btn-primary">Create</button>
-    </div>
-</form>
-
-
 <br/>
 <div class="mb-3">
     <table class="table table-striped">
@@ -41,8 +32,8 @@
                 <tr scope="row">
                     <td> {{ project.get('project_name') }}</td>
                     <td> <button 
-                            class="btn btn-danger" 
-                            hx-delete="/recall_projects/?recall_project_id={{ project.get('recall_project_id') }}"
+                            class="btn btn-danger"
+                            hx-delete="/recall_projects/?recall_project_id={{ project.get('recall_project_id') }}" 
                             hx-confirm="Are you sure?"
                             hx-target="closest tr"
                             hx-swap="outerHTML"
