@@ -21,16 +21,22 @@ router = APIRouter(
 )
 
 # Recall project paths
+@router.get(
+    path="/create_recall_project"
+)
+def create_recall_project_form(request:Request):
+    return templates.TemplateResponse("components/create_recall_project.html", {"request": request})
+
+
 @router.post(
     path="/",
     status_code=status.HTTP_201_CREATED,
     summary="Create a recall project"
 )
-def create_recall(
+def create_recall_project(
     request: Request,
     project_name: str = Form(...),
     current_user:ResponseUser = Depends(get_current_user),
-    hx_request: Optional[str] = Header(None)
     ):
 
     user_id = current_user['user_id']
@@ -49,33 +55,32 @@ def create_recall(
     except IntegrityError:
         return "Project name already exists"
 
+    # Get recall projects and return them
+    #NOTE THIS MUST GO IN THE NEW QUERIES OBJECT
+    # Generate query
+    columns = [RECALL_PROJECTS.recall_project_id, RECALL_PROJECTS.project_name]
+    condition = (RECALL_PROJECTS.user_id == Parameter('%s'))
+    query = queries.select_query(RECALL_PROJECTS, columns, condition)
 
-    if hx_request:
+    # Generate values
+    values = (user_id,)
 
-        print("hx-request")
-        # Get project id to return when called with hx-request
-        columns = [RECALL_PROJECTS.recall_project_id]
-        condition = (
-            (RECALL_PROJECTS.user_id == Parameter('%s')) & (RECALL_PROJECTS.project_name == Parameter("%s"))
+    # Execute query
+    df = DB.pandas_query(query.get_sql(), values)
+
+    if df.empty:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"The user {user_id} does not have recall projects"
         )
-        query = queries.select_query(RECALL_PROJECTS, columns, condition)
-        values = (user_id, project_name)
 
-        query = queries.select_query(RECALL_PROJECTS, columns, condition)
+    projects = df.to_dict('records')
+    context = {
+        "request": request,
+        "projects": projects
+    }
 
-        df = DB.pandas_query(query.get_sql(), values)
+    return templates.TemplateResponse('components/recall_projects.html', context=context)
 
-        recall_project_id = df.recall_project_id.values[0]
-        
-        context = {
-            "request": request,
-            "project_name": project_name,
-            "recall_project_id": recall_project_id
-        }
-
-        return templates.TemplateResponse("components/new_project.html", context=context)
-
-    return templates.TemplateResponse("general_pages/recall_projects.html", {"request": request})
 
 
 
