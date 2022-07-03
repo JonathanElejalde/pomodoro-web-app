@@ -1,15 +1,11 @@
 from typing import Optional
 
 from fastapi import APIRouter, status, Depends, HTTPException
-from pypika import Table, Parameter
 
 from models import Category, CategoryResponse, ResponseUser
 from data import DB
 import query as q
-from utils import delete_message, get_current_user, delete_message
-
-# Constants
-CATEGORIES = Table('categories')
+from utils import get_current_user
 
 router = APIRouter(
     prefix='/categories',
