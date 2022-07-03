@@ -1,12 +1,11 @@
-from sre_parse import CATEGORIES
 from typing import Optional
 
 from fastapi import APIRouter, status, Depends, HTTPException
-from pypika import Table, MySQLQuery, Parameter
+from pypika import Table, Parameter
 
 from models import Category, CategoryResponse, ResponseUser
 from data import DB
-import queries
+import query as q
 from utils import delete_message, get_current_user, delete_message
 
 # Constants
@@ -24,14 +23,9 @@ router = APIRouter(
 )
 def create_category(category:Category, current_user:ResponseUser = Depends(get_current_user)):
     user_id = current_user['user_id']
-
-    # Generate query
-    columns = [
-        CATEGORIES.category_name, CATEGORIES.user_id
-    ]
-    query = queries.insert_query(CATEGORIES, columns)
     values = (category.category_name, user_id)
-    DB.execute_query(query.get_sql(), values)
+    query = q.create_category()
+    DB.execute_query(query, values)
 
     return {"details": f"Category {category.category_name} was created sucessfully"}
 
@@ -43,13 +37,9 @@ def create_category(category:Category, current_user:ResponseUser = Depends(get_c
 )
 def get_categories(current_user:ResponseUser = Depends(get_current_user)):
     user_id = current_user['user_id']
-
-    # Generate query
-    columns = [CATEGORIES.category_id, CATEGORIES.category_name]
-    condition = (CATEGORIES.user_id == Parameter("%s"))
-    query = queries.select_query(CATEGORIES, columns, condition)
     values = (user_id, )
-    df = DB.pandas_query(query.get_sql(), values)
+    df = q.get_categories(values)
+
     return df.to_dict('records')
 
 
@@ -62,17 +52,12 @@ def get_categories(current_user:ResponseUser = Depends(get_current_user)):
 
 def get_category(category_id:int, current_user:ResponseUser = Depends(get_current_user)):
     user_id = current_user['user_id']
-
-    # Generate query
-    columns = [CATEGORIES.category_id, CATEGORIES.category_name]
-    condition = (CATEGORIES.user_id == Parameter("%s")) & (CATEGORIES.category_id == Parameter("%s"))
-    query = queries.select_query(CATEGORIES, columns, condition)
     values = (user_id, category_id)
-    df = DB.pandas_query(query.get_sql(), values)
+    df = q.get_category(values)
 
     if df.empty:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="This project does not exists"
+            status_code=status.HTTP_404_NOT_FOUND, detail="This category does not exists"
         )
     category = df.to_dict('records')[0]
     return category
@@ -85,14 +70,10 @@ def get_category(category_id:int, current_user:ResponseUser = Depends(get_curren
     summary="Update category"
 )
 def update_category(category_id:int, category_name: Optional[str], current_user:ResponseUser = Depends(get_current_user)):
-
-    # Generate query
-    updates = (CATEGORIES.category_name, Parameter('%s'))
-    condition = (CATEGORIES.category_id == Parameter("%s"))
-    query = queries.update_query(CATEGORIES, updates, condition)
-    
-    values = (category_name, category_id)
-    DB.execute_query(query.get_sql(), values)
+    user_id = current_user['user_id']
+    values = (category_name, category_id, user_id)
+    query = q.update_category()
+    DB.execute_query(query, values)
 
     return {
         'category_name': category_name,
@@ -106,13 +87,12 @@ def update_category(category_id:int, category_name: Optional[str], current_user:
     summary="Delete category"
 )
 def delete_category(category_id:int, current_user:ResponseUser = Depends(get_current_user)):
-    
-    condition = (CATEGORIES.category_id == Parameter('%s'))
-    query = queries.delete_query(CATEGORIES, condition)
-    values = (category_id,)
-    DB.execute_query(query.get_sql(), values)
-    message = delete_message(DB)
+    user_id = current_user['user_id']
+    values = (category_id, user_id)
+    query = q.delete_category()
+    DB.execute_query(query, values)
+
     return {
-        'Detail': message
+        'Detail': f"Category {category_id} was deleted"
     }
 

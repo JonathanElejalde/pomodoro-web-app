@@ -8,6 +8,7 @@ USERS, CATEGORIES, PROJECTS, POMODOROS = Tables('users', 'categories', 'projects
 RECALL_PROJECTS, RECALLS = Tables('recall_projects', 'recalls')
 
 
+# Users
 def signup_user()-> str:
     columns = [
         USERS.user_id, USERS.email, USERS.password,
@@ -33,4 +34,48 @@ def delete_user()-> str:
     delete_condition = (USERS.user_id == Parameter("%s"))
     query = queries.delete_query(USERS, delete_condition)
     
+    return query.get_sql()
+
+
+# Categories
+def create_category()-> str:
+    columns = [
+        CATEGORIES.category_name, CATEGORIES.user_id
+    ]
+    query = queries.insert_query(CATEGORIES, columns)
+
+    return query.get_sql()
+
+def get_categories(values:tuple)->DataFrame:
+    columns = [CATEGORIES.category_id, CATEGORIES.category_name]
+    condition = (CATEGORIES.user_id == Parameter("%s"))
+    query = queries.select_query(CATEGORIES, columns, condition)
+    df = DB.pandas_query(query.get_sql(), values)
+
+    return df
+
+def get_category(values:tuple)-> DataFrame:
+    columns = [CATEGORIES.category_id, CATEGORIES.category_name]
+    condition = (CATEGORIES.user_id == Parameter("%s")) & (CATEGORIES.category_id == Parameter("%s"))
+    query = queries.select_query(CATEGORIES, columns, condition)
+    df = DB.pandas_query(query.get_sql(), values)
+
+    return df
+
+def update_category()->str:
+    # Generate query
+    updates = (CATEGORIES.category_name, Parameter('%s'))
+    condition = (
+        (CATEGORIES.category_id == Parameter("%s")) & (CATEGORIES.user_id == Parameter("%s"))
+    )
+    query = queries.update_query(CATEGORIES, updates, condition)
+    
+    return query.get_sql()
+
+def delete_category()->str:
+    condition = (
+        (CATEGORIES.category_id == Parameter('%s')) & (CATEGORIES.user_id == Parameter("%s"))
+    )
+    query = queries.delete_query(CATEGORIES, condition)
+
     return query.get_sql()
