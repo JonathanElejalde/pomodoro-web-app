@@ -123,5 +123,52 @@ def delete_project()-> str:
     query = queries.delete_query(PROJECTS, condition)
 
     return query.get_sql()
+
+
+# Pomodoros
+def create_pomodoro()-> str:
+    columns = [
+        POMODOROS.project_id, POMODOROS.category_id, 
+        POMODOROS.duration, POMODOROS.pomodoro_date,
+        POMODOROS.user_id
+    ]
+    query = queries.insert_query(POMODOROS, columns)
+
+    return query.get_sql()
+
+def get_pomodoros(values:tuple)-> DataFrame:
+    # Generate query
+    join_on = [
+        (PROJECTS, (POMODOROS.project_id == PROJECTS.project_id) & (POMODOROS.category_id == PROJECTS.category_id)),
+        (CATEGORIES, (CATEGORIES.category_id == POMODOROS.category_id))
+    ]
+    columns = [
+        POMODOROS.pomodoro_id, CATEGORIES.category_name, PROJECTS.project_name, POMODOROS.pomodoro_date,
+        POMODOROS.duration, POMODOROS.pomodoro_satisfaction
+    ]
+    condition = [
+        POMODOROS.user_id == Parameter("%s"),
+        POMODOROS.category_id == Parameter("%s"),
+        POMODOROS.project_id == Parameter("%s"),
+    ]
+    query = queries.select_join_on_query(
+        POMODOROS, join_on, columns, condition, 'pomodoro_date'
+    )
+    df = DB.pandas_query(query.get_sql(), values)
+
+    return df
+
+def update_pomodoro_satisfaction()-> str:
+    # Generate query
+    updates = (POMODOROS.pomodoro_satisfaction, Parameter('%s'))
+    condition = (
+        (POMODOROS.pomodoro_id == Parameter("%s")) & (POMODOROS.user_id == Parameter('%s'))
+    )
+    query = queries.update_query(POMODOROS, updates, condition)
+
+    return query.get_sql()
+
+    
+    
     
     

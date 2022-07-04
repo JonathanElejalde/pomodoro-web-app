@@ -1,15 +1,10 @@
 from datetime import datetime
 from fastapi import APIRouter, status, Depends, HTTPException
-from pypika import Tables, Parameter
 
 from models import Pomodoro, PomodoroResponse, ResponseUser, Satisfaction
 from data import DB
-import queries
+import query as q
 from utils import get_current_user, get_satisfaction_int
-
-# Constants
-PROJECTS, CATEGORIES, POMODOROS = Tables('projects', 'categories', 'pomodoros')
-
 
 router = APIRouter(
     prefix='/pomodoros',
@@ -25,24 +20,15 @@ router = APIRouter(
 )
 def create_pomodoro(pomodoro:Pomodoro, current_user:ResponseUser = Depends(get_current_user)):
     user_id = current_user['user_id']
-
-    # Generate query
-    columns = [
-        POMODOROS.project_id, POMODOROS.category_id, 
-        POMODOROS.duration, POMODOROS.pomodoro_date,
-        POMODOROS.user_id
-    ]
-    query = queries.insert_query(POMODOROS, columns)
-
-    # Generate values
     pomodoro_date = datetime.today()
     values = (
         pomodoro.project_id, pomodoro.category_id, pomodoro.duration,
         pomodoro_date, user_id
     )
+    query = q.create_pomodoro()
 
     # Execute query
-    DB.execute_query(query.get_sql(), values)
+    DB.execute_query(query, values)
 
     return {"details": f"Pomodoro was created sucessfully"}
 
@@ -55,28 +41,9 @@ def create_pomodoro(pomodoro:Pomodoro, current_user:ResponseUser = Depends(get_c
 )
 def get_pomodoro(category_id:int, project_id:int, current_user:ResponseUser = Depends(get_current_user)):
     user_id = current_user['user_id']
-
-    # Generate query
-    join_on = [
-        (PROJECTS, (POMODOROS.project_id == PROJECTS.project_id) & (POMODOROS.category_id == PROJECTS.category_id)),
-        (CATEGORIES, (CATEGORIES.category_id == POMODOROS.category_id))
-    ]
-    columns = [
-        POMODOROS.pomodoro_id, CATEGORIES.category_name, PROJECTS.project_name, POMODOROS.pomodoro_date,
-        POMODOROS.duration, POMODOROS.pomodoro_satisfaction
-    ]
-    condition = (
-        (POMODOROS.user_id == Parameter("%s")) & (POMODOROS.category_id == Parameter("%s")) & (POMODOROS.project_id == Parameter("%s"))
-    )
-    query = queries.select_join_on_query(
-        POMODOROS, join_on, columns, condition, 'pomodoro_date'
-    )
-
-    # Generate values
     values = (user_id, category_id, project_id)
 
-    # Execute query
-    df = DB.pandas_query(query.get_sql(), values)
+    df = q.get_pomodoros(values)
     if df.empty:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="There are not pomodoros for this project"
@@ -94,22 +61,14 @@ def get_pomodoro(category_id:int, project_id:int, current_user:ResponseUser = De
     status_code=status.HTTP_200_OK,
     summary=""
 )
-def get_pomodoro(pomodoro_id:int, satisfaction:Satisfaction, current_user:ResponseUser = Depends(get_current_user)):
+def update_pomodoro_satisfaction(pomodoro_id:int, satisfaction:Satisfaction, current_user:ResponseUser = Depends(get_current_user)):
     user_id = current_user['user_id']
-
-    # Generate query
-    updates = (POMODOROS.pomodoro_satisfaction, Parameter('%s'))
-    condition = (
-        (POMODOROS.pomodoro_id == Parameter("%s")) & (POMODOROS.user_id == Parameter('%s'))
-    )
-    query = queries.update_query(POMODOROS, updates, condition)
-
-    # Generate values
     satisfaction = get_satisfaction_int(satisfaction.value)
     values = (satisfaction, pomodoro_id, user_id)
+    query = q.update_pomodoro_satisfaction()
 
     # Execute query
-    DB.execute_query(query.get_sql(), values)
+    DB.execute_query(query, values)
 
     return {
         'Detail': f"Satisfaction updated in pomodoro {pomodoro_id}"
