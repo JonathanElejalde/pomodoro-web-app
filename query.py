@@ -1,3 +1,4 @@
+from fastapi import status, HTTPException
 from pandas import DataFrame
 from pypika import Tables, Parameter
 
@@ -137,7 +138,6 @@ def create_pomodoro()-> str:
     return query.get_sql()
 
 def get_pomodoros(values:tuple)-> DataFrame:
-    # Generate query
     join_on = [
         (PROJECTS, (POMODOROS.project_id == PROJECTS.project_id) & (POMODOROS.category_id == PROJECTS.category_id)),
         (CATEGORIES, (CATEGORIES.category_id == POMODOROS.category_id))
@@ -159,7 +159,6 @@ def get_pomodoros(values:tuple)-> DataFrame:
     return df
 
 def update_pomodoro_satisfaction()-> str:
-    # Generate query
     updates = (POMODOROS.pomodoro_satisfaction, Parameter('%s'))
     condition = (
         (POMODOROS.pomodoro_id == Parameter("%s")) & (POMODOROS.user_id == Parameter('%s'))
@@ -171,7 +170,7 @@ def update_pomodoro_satisfaction()-> str:
     
 # Recall Projects
 def create_recall_project()-> str:
-     # Generate query
+
     columns = [RECALL_PROJECTS.user_id, RECALL_PROJECTS.project_name]
     query = queries.insert_query(RECALL_PROJECTS, columns)
 
@@ -203,3 +202,74 @@ def delete_recall_project()-> str:
 
     return query.get_sql()
     
+
+# Recalls
+def create_recall()-> str:
+    columns = [
+        RECALLS.user_id, RECALLS.recall_project_id, 
+        RECALLS.recall_title, RECALLS.recall
+    ]
+    query = queries.insert_query(RECALLS, columns)
+
+    return query.get_sql()
+
+def get_recalls(values:tuple)-> DataFrame:
+    join_on = [
+        (RECALL_PROJECTS, (RECALLS.user_id == RECALL_PROJECTS.user_id) & (RECALLS.recall_project_id == RECALL_PROJECTS.recall_project_id))
+    ]
+    columns = [
+        RECALLS.recall_id, RECALL_PROJECTS.recall_project_id, 
+        RECALL_PROJECTS.project_name, RECALLS.recall_title, RECALLS.recall
+        ]
+    condition = [
+        RECALLS.recall_project_id == Parameter("%s"), RECALLS.user_id == Parameter("%s")
+    ]
+    query = queries.select_join_on_query(RECALLS, join_on, columns, condition)
+
+    # Execute query
+    df = DB.pandas_query(query.get_sql(), values)
+
+    return df
+
+def update_recall(recall_id:int, recall_title:str, recall:str, user_id:str)-> tuple[str, tuple]:
+    updates = []
+    values = []
+    if recall:
+        updates.append((RECALL_PROJECTS.recall, Parameter("%s")))
+        values.append(recall)
+    if recall_title:
+        updates.append((RECALL_PROJECTS.recall_title, Parameter("%s")))
+        values.append(recall_title)
+
+    if not updates:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"A recall title or a recall should be pass to update",
+            )
+
+    condition = (
+        (RECALLS.user_id == Parameter("%s")) & (RECALLS.recall_id == Parameter("%s"))
+    )
+
+    values.append(user_id)
+    values.append(recall_id)
+
+    query = queries.update_query(RECALLS, updates, condition)
+
+    return query.get_sql(), values
+
+def delete_recall()-> str:
+    condition = (
+        (RECALLS.recall_id == Parameter('%s')) & (RECALLS.user_id == Parameter('%s'))
+    )
+    query = queries.delete_query(RECALLS, condition)
+
+    return query.get_sql()
+
+def delete_recalls()-> str:
+    condition = (
+        (RECALLS.recall_project_id == Parameter('%s')) & (RECALLS.user_id == Parameter('%s'))
+    )
+    query = queries.delete_query(RECALLS, condition)
+
+    return query.get_sql()

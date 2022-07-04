@@ -1,14 +1,12 @@
 from fastapi import APIRouter, status, Depends, HTTPException, Form, Request
 from fastapi.templating import Jinja2Templates
-from pypika import Tables, Parameter
 
 from models import RecallResponse, ResponseUser
 from data import DB
-import queries
-from utils import get_current_user, delete_message
+import query as q
+from utils import get_current_user
 
 # Constants
-RECALLS, RECALL_PROJECTS = Tables('recalls', "recall_projects")
 NORMAL_FORM = Form(..., max_length=255, min_length=1, example="Test")
 
 templates = Jinja2Templates(directory="templates")
@@ -22,7 +20,8 @@ router = APIRouter(
 # Recall paths
 @router.get(
     path="/create_recall",
-    summary="Recall creation"
+    summary="Recall creation",
+    include_in_schema=False
 )
 def create_recall(request: Request):
     return templates.TemplateResponse("general_pages/create_recall.html", {"request": request})
@@ -42,19 +41,11 @@ def create_recall(
     ):
 
     user_id = current_user['user_id']
-
-     # Generate query
-    columns = [
-        RECALLS.user_id, RECALLS.recall_project_id, 
-        RECALLS.recall_title, RECALLS.recall
-    ]
-    query = queries.insert_query(RECALLS, columns)
-
-    # Generate values
     values = (user_id, recall_project_id, recall_title, recall)
-
+    query = q.create_recall()
+    
     # Execute query
-    DB.execute_query(query.get_sql(), values)
+    DB.execute_query(query, values)
 
     return templates.TemplateResponse("general_pages/create_recall.html", {"request": request})
 
@@ -66,27 +57,10 @@ def create_recall(
     status_code=status.HTTP_200_OK,
     summary="Get recalls in a recall project"
 )
-def get_recall(project_id: int, current_user:ResponseUser = Depends(get_current_user)):
+def get_recalls(project_id: int, current_user:ResponseUser = Depends(get_current_user)):
     user_id = current_user['user_id']
-
-    # Generate query
-    join_on = [
-        (RECALL_PROJECTS, (RECALLS.user_id == RECALL_PROJECTS.user_id) & (RECALLS.recall_project_id == RECALL_PROJECTS.recall_project_id))
-    ]
-    columns = [
-        RECALLS.recall_id, RECALL_PROJECTS.recall_project_id, 
-        RECALL_PROJECTS.project_name, RECALLS.recall_title, RECALLS.recall
-        ]
-    condition = (
-        (RECALLS.recall_project_id == Parameter("%s")) & (RECALLS.user_id == Parameter("%s"))
-    )
-    query = queries.select_join_on_query(RECALLS, join_on, columns, condition)
-
-    # Generate values
     values = (project_id, user_id)
-
-    # Execute query
-    df = DB.pandas_query(query.get_sql(), values)
+    df = q.get_recalls(values)
 
     if df.empty:
         raise HTTPException(
@@ -96,7 +70,6 @@ def get_recall(project_id: int, current_user:ResponseUser = Depends(get_current_
     return df.to_dict('records')
 
 # CREATE AN ENDPOINT THAT SEARCHES BY TEXT
-
 
 
 @router.put(
@@ -109,34 +82,10 @@ def update_recalls(
     recall:str = None, current_user:ResponseUser = Depends(get_current_user)
     ):
     user_id = current_user['user_id']
-
-    # Generate query
-    updates = []
-    values = []
-    if recall:
-        updates.append((RECALL_PROJECTS.recall, Parameter("%s")))
-        values.append(recall)
-    if recall_title:
-        updates.append((RECALL_PROJECTS.recall_title, Parameter("%s")))
-        values.append(recall_title)
-
-    if not updates:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"A recall title or a recall should be pass to update",
-            )
-
-    condition = (
-        (RECALLS.user_id == Parameter("%s")) & (RECALLS.recall_id == Parameter("%s"))
-    )
-
-    values.append(user_id)
-    values.append(recall_id)
-
-    query = queries.update_query(RECALLS, updates, condition)
+    query, values = q.update_recall(recall_id, recall_title, recall, user_id)
 
     # Execute query
-    DB.execute_query(query.get_sql(), tuple(values))
+    DB.execute_query(query, tuple(values))
 
     return {
         "detail": f"Recall {recall_id} was updated sucessfully"
@@ -148,27 +97,15 @@ def update_recalls(
     status_code=status.HTTP_200_OK,
     summary="Delete a recall"
 )
-def delete_recalls(recall_id:int, current_user:ResponseUser = Depends(get_current_user)):
+def delete_recall(recall_id:int, current_user:ResponseUser = Depends(get_current_user)):
     user_id = current_user['user_id']
-    
-    # Generate query
-    condition = (
-        (RECALLS.recall_id == Parameter('%s')) & (RECALLS.user_id == Parameter('%s'))
-    )
-    query = queries.delete_query(RECALLS, condition)
-
-    # Generate values
     values = (recall_id, user_id)
+    query = q.delete_recall()
     
-    # Execute query
-    print(query.get_sql())
-    print(values)
-    DB.execute_query(query.get_sql(), values)
-
-    message = delete_message(DB)
+    DB.execute_query(query, values)
 
     return {
-        'Detail': message
+        'Detail': f"Recall {recall_id} was deleted"
     }
 
 @router.delete(
@@ -176,25 +113,16 @@ def delete_recalls(recall_id:int, current_user:ResponseUser = Depends(get_curren
     status_code=status.HTTP_200_OK,
     summary="Delete all the recalls in a recall project"
 )
-def delete_recall(recall_project_id:int, current_user:ResponseUser = Depends(get_current_user)):
+def delete_recalls(recall_project_id:int, current_user:ResponseUser = Depends(get_current_user)):
     user_id = current_user['user_id']
-    
-    # Generate query
-    condition = (
-        (RECALLS.recall_project_id == Parameter('%s')) & (RECALLS.user_id == Parameter('%s'))
-    )
-    query = queries.delete_query(RECALLS, condition)
-
-    # Generate values
     values = (recall_project_id, user_id)
+    query = q.delete_recalls()
     
     # Execute query
-    DB.execute_query(query.get_sql(), values)
-
-    message = delete_message(DB)
+    DB.execute_query(query, values)
 
     return {
-        'Detail': message
+        'Detail': f"Delete all recalls in project {recall_project_id}"
     }
 
 
