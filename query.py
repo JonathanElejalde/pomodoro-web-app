@@ -169,6 +169,37 @@ def update_pomodoro_satisfaction()-> str:
     return query.get_sql()
 
     
+# Recall Projects
+def create_recall_project()-> str:
+     # Generate query
+    columns = [RECALL_PROJECTS.user_id, RECALL_PROJECTS.project_name]
+    query = queries.insert_query(RECALL_PROJECTS, columns)
+
+    return query.get_sql()
+
+def get_recall_projects(values:tuple)-> DataFrame:
+    columns = [RECALL_PROJECTS.recall_project_id, RECALL_PROJECTS.project_name]
+    condition = [RECALL_PROJECTS.user_id == Parameter('%s')]
+    query = queries.select_query(RECALL_PROJECTS, columns, condition)
+    # Execute query
+    df = DB.pandas_query(query.get_sql(), values)
+
+    return df
+
+def update_recall_project_name()-> str:
+    updates = (RECALL_PROJECTS.project_name, Parameter('%s'))
+    condition = (
+        (RECALL_PROJECTS.user_id == Parameter('%s')) & (RECALL_PROJECTS.recall_project_id == Parameter("%s"))
+        )
+    query = queries.update_query(RECALL_PROJECTS, updates, condition)
+
+    return query.get_sql()
     
-    
+def delete_recall_project()-> str:
+    condition = (
+        (RECALL_PROJECTS.recall_project_id == Parameter('%s')) & (RECALL_PROJECTS.user_id == Parameter('%s'))
+    )
+    query = queries.delete_query(RECALL_PROJECTS, condition)
+
+    return query.get_sql()
     

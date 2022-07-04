@@ -3,15 +3,12 @@ from typing import Optional
 from fastapi import APIRouter, status, Depends, HTTPException, Form, Request, Header
 from fastapi.templating import Jinja2Templates
 from mysql.connector.errors import IntegrityError
-from pypika import Table, Parameter
 
 from models import RecallProjectResponse, ResponseUser
 from data import DB
-import queries
-from utils import get_current_user, delete_message
+import query as q
+from utils import get_current_user
 
-# Constants
-RECALL_PROJECTS = Table('recall_projects')
 
 templates = Jinja2Templates(directory="templates")
 
@@ -22,7 +19,8 @@ router = APIRouter(
 
 # Recall project paths
 @router.get(
-    path="/create_recall_project"
+    path="/create_recall_project",
+    include_in_schema=False
 )
 def create_recall_project_form(request:Request):
     return templates.TemplateResponse("components/create_recall_project.html", {"request": request})
@@ -38,35 +36,19 @@ def create_recall_project(
     project_name: str = Form(...),
     current_user:ResponseUser = Depends(get_current_user),
     ):
-
     user_id = current_user['user_id']
-
-     # Generate query
-    columns = [RECALL_PROJECTS.user_id, RECALL_PROJECTS.project_name]
-
-    query = queries.insert_query(RECALL_PROJECTS, columns)
-
-    # Generate values
     values = (user_id, project_name)
+    query = q.create_recall_project()
 
-    # Execute query
     try:
-        DB.execute_query(query.get_sql(), values)
+        DB.execute_query(query, values)
     except IntegrityError:
+        # Show this as an error/warning in the template
         return "Project name already exists"
 
     # Get recall projects and return them
-    #NOTE THIS MUST GO IN THE NEW QUERIES OBJECT
-    # Generate query
-    columns = [RECALL_PROJECTS.recall_project_id, RECALL_PROJECTS.project_name]
-    condition = (RECALL_PROJECTS.user_id == Parameter('%s'))
-    query = queries.select_query(RECALL_PROJECTS, columns, condition)
-
-    # Generate values
     values = (user_id,)
-
-    # Execute query
-    df = DB.pandas_query(query.get_sql(), values)
+    df = q.get_recall_projects(values)
 
     if df.empty:
         raise HTTPException(
@@ -82,27 +64,16 @@ def create_recall_project(
     return templates.TemplateResponse('components/recall_projects.html', context=context)
 
 
-
-
 @router.get(
     path="/",
     response_model=list[RecallProjectResponse],
     status_code=status.HTTP_200_OK,
     summary="Get recall project names",
 )
-def get_recall_project_names(request: Request, current_user:ResponseUser = Depends(get_current_user), hx_request: Optional[str] = Header(None)):
+def get_recall_projects(request: Request, current_user:ResponseUser = Depends(get_current_user), hx_request: Optional[str] = Header(None)):
     user_id = current_user['user_id']
-
-    # Generate query
-    columns = [RECALL_PROJECTS.recall_project_id, RECALL_PROJECTS.project_name]
-    condition = (RECALL_PROJECTS.user_id == Parameter('%s'))
-    query = queries.select_query(RECALL_PROJECTS, columns, condition)
-
-    # Generate values
     values = (user_id,)
-
-    # Execute query
-    df = DB.pandas_query(query.get_sql(), values)
+    df = q.get_recall_projects(values)
 
     if df.empty:
         raise HTTPException(
@@ -126,24 +97,16 @@ def get_recall_project_names(request: Request, current_user:ResponseUser = Depen
     status_code=status.HTTP_200_OK,
     summary="Update a recall project"
 )
-def get_recall_project_names(
+def update_recall_project_name(
     recall_project_id:int, project_name: str, 
     current_user:ResponseUser = Depends(get_current_user)):
     
     user_id = current_user['user_id']
-
-    # Generate query
-    updates = (RECALL_PROJECTS.project_name, Parameter('%s'))
-    condition = (
-        (RECALL_PROJECTS.user_id == Parameter('%s')) & (RECALL_PROJECTS.recall_project_id == Parameter("%s"))
-        )
-    query = queries.update_query(RECALL_PROJECTS, updates, condition)
-
-    # Generate values
     values = (project_name, user_id, recall_project_id)
-
+    query = q.update_recall_project_name()
+    
     # Execute query
-    DB.execute_query(query.get_sql(), values)
+    DB.execute_query(query, values)
 
     return {
         "recall_project_id": recall_project_id,
@@ -161,19 +124,10 @@ def get_recall_project_names(
     current_user:ResponseUser = Depends(get_current_user)):
 
     user_id = current_user['user_id']
-
-    # Generate query
-    condition = (
-        (RECALL_PROJECTS.recall_project_id == Parameter('%s')) & (RECALL_PROJECTS.user_id == Parameter('%s'))
-    )
-    query = queries.delete_query(RECALL_PROJECTS, condition)
-
-    # Generate values
     values = (recall_project_id, user_id)
+    query = q.delete_recall_project()
     
     # Execute query
-    DB.execute_query(query.get_sql(), values)
-
-    #message = delete_message(DB)
+    DB.execute_query(query, values)
 
     return "<tr></tr>"
