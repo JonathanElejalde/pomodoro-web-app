@@ -15,7 +15,7 @@ app.include_router(recall_projects.router)
 app.include_router(recalls.router)
 
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 def home(request: Request, msg:str = None):
     return templates.TemplateResponse(
         "general_pages/homepage.html", {"request": request, "msg":msg}
