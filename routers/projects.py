@@ -1,11 +1,15 @@
 from datetime import datetime
 
-from fastapi import APIRouter, status, Depends, HTTPException
+from fastapi import APIRouter, status, Depends, HTTPException, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 
 from models import Project, ProjectResponse, ResponseUser
 from data import DB
 import query as q
-from utils import get_current_user, delete_message
+from utils import get_current_user
+
+templates = Jinja2Templates(directory="templates")
 
 router = APIRouter(
     prefix='/projects',
@@ -33,20 +37,23 @@ def create_project(project:Project, current_user:ResponseUser = Depends(get_curr
 
 @router.get(
     path="/",
-    response_model=list[ProjectResponse],
     status_code=status.HTTP_200_OK,
-    summary="Get projects"
+    summary="Get projects",
+    response_class=HTMLResponse
 )
-def get_projects(category_id:int, current_user:ResponseUser = Depends(get_current_user)):
+def get_projects(request: Request, category_id:int, current_user:ResponseUser = Depends(get_current_user)):
     user_id = current_user['user_id']
     values = (user_id, category_id)
     df = q.get_projects(values)
     if df.empty:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="There are not projects in this category"
-        )
+        return '<select id="project-names" name="project_id"></select>'
+    projects = df.to_dict('records')
+    context = {
+        'request': request,
+        'projects': projects
+    }
 
-    return df.to_dict('records')
+    return templates.TemplateResponse("/components/projects.html", context=context)
     
 
 @router.get(

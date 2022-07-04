@@ -129,7 +129,7 @@ def delete_project()-> str:
 # Pomodoros
 def create_pomodoro()-> str:
     columns = [
-        POMODOROS.project_id, POMODOROS.category_id, 
+        POMODOROS.category_id, POMODOROS.project_id, 
         POMODOROS.duration, POMODOROS.pomodoro_date,
         POMODOROS.user_id
     ]

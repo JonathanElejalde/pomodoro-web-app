@@ -1,0 +1,6 @@
+<select id="project-names" name="project_id" required>
+    {% for project in projects %}
+        <option value="{{project.get('project_id')}}">{{project.get('project_name')}}</option>
+    {% endfor %}
+</select>
+

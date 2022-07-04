@@ -1,0 +1,13 @@
+<select id="category-names" 
+        name="category_id"
+        hx-get="/projects"
+        hx-trigger="change"
+        hx-target="#project-names"
+        hx-swap="outerHTML"
+        required
+        >
+        <option selected>Choose a category</option>
+    {% for category in categories %}
+        <option value="{{category.get('category_id')}}">{{category.get('category_name')}}</option>
+    {% endfor %}
+</select>

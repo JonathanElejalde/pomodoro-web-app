@@ -1,11 +1,14 @@
 from typing import Optional
 
-from fastapi import APIRouter, status, Depends, HTTPException
+from fastapi import APIRouter, status, Depends, HTTPException, Request
+from fastapi.templating import Jinja2Templates
 
 from models import Category, CategoryResponse, ResponseUser
 from data import DB
 import query as q
 from utils import get_current_user
+
+templates = Jinja2Templates(directory="templates")
 
 router = APIRouter(
     prefix='/categories',
@@ -31,12 +34,18 @@ def create_category(category:Category, current_user:ResponseUser = Depends(get_c
     status_code=status.HTTP_200_OK,
     summary="Get categories"
 )
-def get_categories(current_user:ResponseUser = Depends(get_current_user)):
+def get_categories(request:Request, current_user:ResponseUser = Depends(get_current_user)):
     user_id = current_user['user_id']
     values = (user_id, )
     df = q.get_categories(values)
+    categories = df.to_dict('records')
 
-    return df.to_dict('records')
+    context = {
+        'request': request,
+        'categories': categories
+    }
+
+    return templates.TemplateResponse("components/categories.html", context=context)
 
 
 @router.get(

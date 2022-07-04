@@ -1,0 +1,43 @@
+{% extends "shared/base.html" %}
+
+
+{% block title %}
+  <title>Create a Pomodoro</title>
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="row">
+      <div class="text-danger font-weight-bold">
+        {% for error in errors %}
+          <li>{{error}}</li>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="row my-5">
+      <h3 class="text-center display-4">Create a Pomodoro</h3>
+
+      <form method="POST" hx-post="/pomodoros" hx-target="#placeholder" id="pomodoro-form">
+        <div class="mb-3">
+          <label for="category-names">Categories</label>
+          <div id="category-names" hx-get="/categories" hx-trigger="load" hx-target="this" hx-swap="outerHTML"></div>
+        </div>
+
+        <div class="mb-3">
+            <label for="project-names">Projects</label>
+            <select id="project-names" required></select>
+        </div>
+        <div class="mb-3">
+            <label for="pomodoro">Duration in minutes:</label>
+            <input type="number" id="pomodoro" name="duration" min="25" max="60" step="5" placeholder="25" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </form>
+    </div>
+
+    <div id="placeholder"></div>
+
+  </div>
+{% endblock %}

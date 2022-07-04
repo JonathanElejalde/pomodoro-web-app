@@ -1,10 +1,15 @@
+from ast import For
 from datetime import datetime
-from fastapi import APIRouter, status, Depends, HTTPException
+from fastapi import APIRouter, status, Depends, HTTPException, Form
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 
 from models import Pomodoro, PomodoroResponse, ResponseUser, Satisfaction
 from data import DB
 import query as q
 from utils import get_current_user, get_satisfaction_int
+
+templates = Jinja2Templates(directory="templates")
 
 router = APIRouter(
     prefix='/pomodoros',
@@ -16,13 +21,19 @@ router = APIRouter(
 @router.post(
     path="/",
     status_code=status.HTTP_201_CREATED,
-    summary="Create pomodoro"
+    summary="Create pomodoro",
+    response_class=HTMLResponse
 )
-def create_pomodoro(pomodoro:Pomodoro, current_user:ResponseUser = Depends(get_current_user)):
+def create_pomodoro(
+        category_id:int = Form(...),
+        project_id:int = Form(...),
+        duration:int = Form(...),
+        current_user:ResponseUser = Depends(get_current_user)
+    ):
     user_id = current_user['user_id']
     pomodoro_date = datetime.today()
     values = (
-        pomodoro.project_id, pomodoro.category_id, pomodoro.duration,
+        category_id, project_id, duration,
         pomodoro_date, user_id
     )
     query = q.create_pomodoro()
@@ -30,7 +41,7 @@ def create_pomodoro(pomodoro:Pomodoro, current_user:ResponseUser = Depends(get_c
     # Execute query
     DB.execute_query(query, values)
 
-    return {"details": f"Pomodoro was created sucessfully"}
+    return '<h3 id="placegolder">Pomodoro created</h3>'
 
 
 @router.get(
