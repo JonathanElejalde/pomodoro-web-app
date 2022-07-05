@@ -1,10 +1,10 @@
-from ast import For
+
 from datetime import datetime
-from fastapi import APIRouter, status, Depends, HTTPException, Form
+from fastapi import APIRouter, status, Depends, HTTPException, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from models import Pomodoro, PomodoroResponse, ResponseUser, Satisfaction
+from models import PomodoroResponse, ResponseUser, Satisfaction
 from data import DB
 import query as q
 from utils import get_current_user, get_satisfaction_int

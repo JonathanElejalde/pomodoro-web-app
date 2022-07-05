@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request, Depends
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from config import settings
@@ -8,6 +9,7 @@ from utils import get_current_user
 
 templates = Jinja2Templates(directory="templates")
 
+
 app = FastAPI(title=settings.PROJECT_NAME, version=settings.PROJECT_VERSION)
 app.include_router(users.router)
 app.include_router(categories.router)
@@ -16,6 +18,7 @@ app.include_router(pomodoros.router)
 app.include_router(recall_projects.router)
 app.include_router(recalls.router)
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/", include_in_schema=False)
 def home(request: Request, msg:str = None, current_user:ResponseUser = Depends(get_current_user)):
