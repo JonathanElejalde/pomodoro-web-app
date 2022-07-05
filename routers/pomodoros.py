@@ -1,5 +1,6 @@
-
 from datetime import datetime
+import random
+
 from fastapi import APIRouter, status, Depends, HTTPException, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -41,7 +42,9 @@ def create_pomodoro(
     # Execute query
     DB.execute_query(query, values)
 
-    return '<h3 id="placegolder">Pomodoro created</h3>'
+    color = "#{:06x}".format(random.randint(0, 0xFFFFFF))
+
+    return f'<h3 style="color:{color};" id="placeholder">Pomodoro created, Start the timer</h3>'
 
 
 @router.get(
