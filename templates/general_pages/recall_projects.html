@@ -26,6 +26,7 @@
         <thead>
             <tr>
                 <th scope="col">Project Name</th>
+                <th scope="col">Edit</th>
                 <th scope="col">Delete</th>
             </tr>
         </thead>
@@ -34,14 +35,26 @@
             {% for project in projects %}
 
                 <tr scope="row">
-                    <td> {{ project.get('project_name') }}</td>
-                    <td> <button 
+                    <td> {{ project.project_name }}</td>
+                    <td> 
+                        <button class="btn btn-primary"
+                                hx-get="/recall_projects/edit/{{project.recall_project_id}}"
+                                hx-target="closest tr"
+                                hx-swap="outerHTML"
+                                >
+                        Edit
+                        </button>
+                    </td>
+                    <td>
+                        <button 
                             class="btn btn-danger"
-                            hx-delete="/recall_projects/?recall_project_id={{ project.get('recall_project_id') }}" 
+                            hx-delete="/recall_projects/{{ project.recall_project_id }}" 
                             hx-confirm="Are you sure?"
                             hx-target="closest tr"
                             hx-swap="outerHTML"
-                            >Delete</button></td>
+                        >Delete</button>
+                    </td>
+
                 </tr>
                 
             {% endfor %}

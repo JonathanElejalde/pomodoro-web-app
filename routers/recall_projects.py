@@ -1,6 +1,8 @@
+from multiprocessing import context
 from typing import Optional
 
 from fastapi import APIRouter, status, Depends, HTTPException, Form, Request, Header
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from mysql.connector.errors import IntegrityError
 
@@ -91,14 +93,36 @@ def get_recall_projects(request: Request, current_user:ResponseUser = Depends(ge
     return templates.TemplateResponse("general_pages/recall_projects.html", context=context)
 
 
+@router.get(
+    path="/edit/{recall_project_id}",
+    include_in_schema=False,
+    response_class=HTMLResponse
+)
+def edit_recall_project(recall_project_id:int, request:Request, 
+    current_user:ResponseUser = Depends(get_current_user), hx_request: Optional[str] = Header(None)
+    ):
+    user_id = current_user['user_id']
+    values = [user_id, recall_project_id]
+    df = q.get_recall_projects(values)
+
+    recall_project = df.to_dict('records')[0]
+    context = {
+        "request": request,
+        "recall_project": recall_project
+    }
+    
+    return templates.TemplateResponse('components/edit_recall_project.html', context=context)
+
+
+
 @router.put(
-    path="/",
-    response_model=RecallProjectResponse,
+    path="/{recall_project_id}",
+    response_class=HTMLResponse,
     status_code=status.HTTP_200_OK,
     summary="Update a recall project"
 )
 def update_recall_project_name(
-    recall_project_id:int, project_name: str, 
+    recall_project_id:int, request:Request, project_name:str = Form(...), 
     current_user:ResponseUser = Depends(get_current_user)):
     
     user_id = current_user['user_id']
@@ -108,14 +132,19 @@ def update_recall_project_name(
     # Execute query
     DB.execute_query(query, values)
 
-    return {
-        "recall_project_id": recall_project_id,
-        "project_name": project_name
+    context = {
+        "request": request,
+        "recall_project": {
+            "project_name": project_name, 
+            "recall_project_id": recall_project_id
+            }
     }
+
+    return templates.TemplateResponse("components/edited_recall_project.html", context=context)
 
 
 @router.delete(
-    path="/",
+    path="/{recall_project_id}",
     status_code=status.HTTP_200_OK,
     summary="Delete a recall project"
 )

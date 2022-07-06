@@ -1,3 +1,5 @@
+from typing import Union
+
 from fastapi import status, HTTPException
 from pandas import DataFrame
 from pypika import Tables, Parameter
@@ -176,9 +178,16 @@ def create_recall_project()-> str:
 
     return query.get_sql()
 
-def get_recall_projects(values:tuple)-> DataFrame:
+def get_recall_projects(values:Union[tuple, list])-> DataFrame:
     columns = [RECALL_PROJECTS.recall_project_id, RECALL_PROJECTS.project_name]
-    condition = [RECALL_PROJECTS.user_id == Parameter('%s')]
+
+    if type(values) == list:
+        condition = [
+            RECALL_PROJECTS.user_id == Parameter('%s'), 
+            RECALL_PROJECTS.recall_project_id == Parameter("%s")
+        ]
+    else:
+        condition = [RECALL_PROJECTS.user_id == Parameter('%s')]
     query = queries.select_query(RECALL_PROJECTS, columns, condition)
     # Execute query
     df = DB.pandas_query(query.get_sql(), values)
