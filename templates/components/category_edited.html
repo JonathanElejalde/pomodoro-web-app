@@ -1,0 +1,22 @@
+<tr scope="row">
+    <td> {{ category.category_name }}</td>
+    <td> 
+        <button class="btn btn-primary"
+                hx-get="/categories/edit/{{category.category_id}}"
+                hx-target="closest tr"
+                hx-swap="outerHTML"
+                >
+        Edit
+        </button>
+    </td>
+    <td>
+        <button 
+            class="btn btn-danger"
+            hx-delete="/categories/{{ category.category_id }}" 
+            hx-confirm="Are you sure?"
+            hx-target="closest tr"
+            hx-swap="outerHTML"
+        >Delete</button>
+    </td>
+
+</tr>

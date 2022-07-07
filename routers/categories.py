@@ -1,6 +1,7 @@
 from typing import Optional
 
-from fastapi import APIRouter, status, Depends, HTTPException, Request
+from fastapi import APIRouter, status, Depends, HTTPException, Request, Header, Form
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from models import Category, CategoryResponse, ResponseUser
@@ -34,7 +35,7 @@ def create_category(category:Category, current_user:ResponseUser = Depends(get_c
     status_code=status.HTTP_200_OK,
     summary="Get categories"
 )
-def get_categories(request:Request, current_user:ResponseUser = Depends(get_current_user)):
+def get_categories(request:Request, current_user:ResponseUser = Depends(get_current_user), hx_request: Optional[str] = Header(None)):
     user_id = current_user['user_id']
     values = (user_id, )
     df = q.get_categories(values)
@@ -45,7 +46,10 @@ def get_categories(request:Request, current_user:ResponseUser = Depends(get_curr
         'categories': categories
     }
 
-    return templates.TemplateResponse("components/categories.html", context=context)
+    if hx_request:
+        return templates.TemplateResponse("components/categories.html", context=context)
+    return templates.TemplateResponse("general_pages/categories.html", context=context)
+
 
 
 @router.get(
@@ -74,22 +78,27 @@ def get_category(category_id:int, current_user:ResponseUser = Depends(get_curren
     status_code=status.HTTP_200_OK,
     summary="Update category"
 )
-def update_category(category_id:int, category_name: Optional[str], current_user:ResponseUser = Depends(get_current_user)):
+def update_category(request: Request, category_id:int, category_name:str = Form(...), current_user:ResponseUser = Depends(get_current_user)):
     user_id = current_user['user_id']
     values = (category_name, category_id, user_id)
     query = q.update_category()
     DB.execute_query(query, values)
 
-    return {
-        'category_name': category_name,
-        'category_id': category_id
+    context = {
+        "request": request,
+        "category": {
+            "category_name": category_name, 
+            "category_id": category_id
+            }
     }
 
+    return templates.TemplateResponse("components/category_edited.html", context=context)
 
 @router.delete(
     path="/{category_id}",
     status_code=status.HTTP_200_OK,
-    summary="Delete category"
+    summary="Delete category",
+    response_class=HTMLResponse
 )
 def delete_category(category_id:int, current_user:ResponseUser = Depends(get_current_user)):
     user_id = current_user['user_id']
@@ -97,7 +106,24 @@ def delete_category(category_id:int, current_user:ResponseUser = Depends(get_cur
     query = q.delete_category()
     DB.execute_query(query, values)
 
-    return {
-        'Detail': f"Category {category_id} was deleted"
-    }
+    return "<tr></tr>"
 
+@router.get(
+    path="/edit/{category_id}",
+    include_in_schema=False,
+    response_class=HTMLResponse
+)
+def edit_recall_project(category_id:int, request:Request, 
+    current_user:ResponseUser = Depends(get_current_user), hx_request: Optional[str] = Header(None)
+    ):
+    user_id = current_user['user_id']
+    values = [user_id, category_id]
+    df = q.get_categories(values, category_id)
+
+    category = df.to_dict('records')[0]
+    context = {
+        "request": request,
+        "category": category
+    }
+    
+    return templates.TemplateResponse('components/edit_category.html', context=context)

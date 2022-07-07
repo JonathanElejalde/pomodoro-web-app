@@ -139,13 +139,14 @@ def update_recall_project_name(
             }
     }
 
-    return templates.TemplateResponse("components/edited_recall_project.html", context=context)
+    return templates.TemplateResponse("components/recall_project_edited.html", context=context)
 
 
 @router.delete(
     path="/{recall_project_id}",
     status_code=status.HTTP_200_OK,
-    summary="Delete a recall project"
+    summary="Delete a recall project",
+    response_class=HTMLResponse
 )
 def get_recall_project_names(
     recall_project_id:int,
