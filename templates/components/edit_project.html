@@ -1,0 +1,29 @@
+<tr scope="row">
+    
+    <td>
+        <input id='project-name' name="new_project_name" value='{{project.project_name}}' <="" td="">
+        <input id="project-id" name="project_id" type="hidden" value="{{project.project_id}}" <="" td="">
+    </td>
+    <td> {{ project.start }}</td>
+    <td> {{ project.end }}</td>
+    <td> {{ project.cancel }}</td>
+    
+    <td>
+        <button class="btn btn-primary" 
+                hx-put="/projects/name/{{project.project_id}}" 
+                hx-include="closest tr"
+                hx-target="closest tr"
+                hx-swap="outerHTML"
+                >Save</button>
+    </td>
+    <td>
+        <button 
+            class="btn btn-danger"
+            hx-delete="/projects/{{ project.project_id }}" 
+            hx-confirm="Are you sure?"
+            hx-target="closest tr"
+            hx-swap="outerHTML"
+            hx-include="#category-names"
+        >Delete</button>
+    </td>
+</tr>

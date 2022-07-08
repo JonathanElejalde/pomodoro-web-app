@@ -1,0 +1,29 @@
+{% extends "shared/base.html" %}
+
+{% block title %}
+  <title>Projects</title>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+<div id="errors" class="text-danger font-weight-bold">
+    {% for error in errors %}
+    <li>{{error}}</li>
+    {% endfor %}
+</div>
+</div>
+
+<h1 style="text-align: center;">Projects</h1>
+
+<form class="d-flex">
+    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+    <button class="btn btn-outline-success" type="submit">Search</button>
+</form>
+
+<div class="mb-3">
+    <label for="category-names">Categories</label>
+    <div id="category-names" hx-get="/categories" hx-trigger="load" hx-target="this" hx-swap="outerHTML"></div>
+</div>
+
+<div id="project-names"></div>
+{% endblock %}

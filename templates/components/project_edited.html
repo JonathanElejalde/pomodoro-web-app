@@ -1,0 +1,27 @@
+<tr scope="row">
+    <td> {{ project.project_name }}</td>
+    <td> {{ project.start }}</td>
+    <td> {{ project.end }}</td>
+    <td> {{ project.cancel }}</td>
+    <td> 
+        <button class="btn btn-primary"
+                hx-get="/projects/edit/{{project.project_id}}"
+                hx-target="closest tr"
+                hx-swap="outerHTML",
+                hx-include="#category-names"
+                >
+        Edit
+        </button>
+    </td>
+    <td>
+        <button 
+            class="btn btn-danger"
+            hx-delete="/projects/{{ project.project_id }}" 
+            hx-confirm="Are you sure?"
+            hx-target="closest tr"
+            hx-swap="outerHTML"
+            hx-include="#category-names"
+        >Delete</button>
+    </td>
+
+</tr>
