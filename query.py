@@ -88,7 +88,7 @@ def create_project()-> str:
 
     return query.get_sql()
 
-def get_projects(values:tuple, project_id:int = None)-> DataFrame:
+def get_projects(values:tuple, project_id:int = None, category_id:int=None)-> DataFrame:
     on_fields = ('category_id', 'user_id')
     columns = [
         PROJECTS.project_id, PROJECTS.category_id,
@@ -96,8 +96,11 @@ def get_projects(values:tuple, project_id:int = None)-> DataFrame:
         PROJECTS.start, PROJECTS.end, PROJECTS.canceled
     ]
     condition = [
-        PROJECTS.user_id == Parameter('%s'), PROJECTS.category_id == Parameter('%s')
+        PROJECTS.user_id == Parameter('%s')
     ]
+    if category_id:
+        condition.append(PROJECTS.category_id == Parameter("%s"))
+
     if project_id:
         condition.append(PROJECTS.project_id == Parameter('%s'))
 
@@ -113,7 +116,7 @@ def get_projects(values:tuple, project_id:int = None)-> DataFrame:
 def update_project(column)-> str:
     updates = (PROJECTS[column], Parameter("%s"))
     condition = (
-        (PROJECTS.category_id == Parameter("%s")) & (PROJECTS.project_id == Parameter("%s")) & (PROJECTS.user_id == Parameter('%s'))
+        (PROJECTS.project_id == Parameter("%s")) & (PROJECTS.user_id == Parameter('%s'))
     )
     query = queries.update_query(PROJECTS, updates, condition)
 
@@ -121,7 +124,7 @@ def update_project(column)-> str:
 
 def delete_project()-> str:
     condition = (
-        (PROJECTS.category_id == Parameter("%s")) & (PROJECTS.project_id == Parameter('%s')) & (PROJECTS.user_id == Parameter('%s'))
+        (PROJECTS.project_id == Parameter('%s')) & (PROJECTS.user_id == Parameter('%s'))
     )
     query = queries.delete_query(PROJECTS, condition)
 
