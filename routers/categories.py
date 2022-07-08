@@ -114,7 +114,7 @@ def delete_category(category_id:int, current_user:ResponseUser = Depends(get_cur
     response_class=HTMLResponse
 )
 def edit_recall_project(category_id:int, request:Request, 
-    current_user:ResponseUser = Depends(get_current_user), hx_request: Optional[str] = Header(None)
+    current_user:ResponseUser = Depends(get_current_user)
     ):
     user_id = current_user['user_id']
     values = [user_id, category_id]
