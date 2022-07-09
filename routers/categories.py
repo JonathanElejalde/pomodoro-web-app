@@ -4,7 +4,7 @@ from fastapi import APIRouter, status, Depends, HTTPException, Request, Header, 
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from models import Category, CategoryResponse, ResponseUser
+from models import CategoryResponse, ResponseUser
 from data import DB
 import query as q
 from utils import get_current_user
@@ -16,31 +16,43 @@ router = APIRouter(
     tags=["Categories"]
 )
 
+def get_categories_list(user_id:int)-> list[str]:
+    values = (user_id, )
+    df = q.get_categories(values)
+    return df.to_dict('records')
+
+
+
+
 @router.post(
     path="/",
     status_code=status.HTTP_201_CREATED,
+    response_class=HTMLResponse,
     summary="Category creation"
 )
-def create_category(category:Category, current_user:ResponseUser = Depends(get_current_user)):
+def create_category(request:Request, category_name:str = Form(...), current_user:ResponseUser = Depends(get_current_user)):
     user_id = current_user['user_id']
-    values = (category.category_name, user_id)
+    values = (category_name, user_id)
     query = q.create_category()
     DB.execute_query(query, values)
 
-    return {"details": f"Category {category.category_name} was created sucessfully"}
+    categories = get_categories_list(user_id)
+    context = {
+        'request': request,
+        'categories': categories
+    }
+
+    return templates.TemplateResponse('components/categories.html', context=context)
 
 @router.get(
     path="/",
-    response_model=list[CategoryResponse],
+    response_class=HTMLResponse,
     status_code=status.HTTP_200_OK,
     summary="Get categories"
 )
 def get_categories(request:Request, current_user:ResponseUser = Depends(get_current_user), hx_request: Optional[str] = Header(None)):
     user_id = current_user['user_id']
-    values = (user_id, )
-    df = q.get_categories(values)
-    categories = df.to_dict('records')
-
+    categories = get_categories_list(user_id)
     context = {
         'request': request,
         'categories': categories

@@ -46,10 +46,31 @@
     <div class="row my-5">
       <h3 class="text-center display-4">Create a Pomodoro</h3>
 
+      <button _="on click toggle .hidden on #create-category then
+                if my innerHTML == 'Create Category'
+                  set my innerHTML to 'Hide'
+                otherwise 
+                  set my innerHTML to 'Create Category'"
+                >Create Category</button>
+
+      <form id="create-category" class="hidden" method="POST">
+        <div id="new-category" class="mb-3">
+          <label>Create a category</label>
+          <input id="new-category-name" type="text" name="category_name" 
+                 class="form-control" required
+                 _="on click put '' into #new-category-name's value">
+          <button id="new-category-btn" type="submit" hx-post="/categories" 
+                  hx-target="#category-names"
+                  hx-swap="outerHTML"
+                  >Create</button>
+        </div>
+      </form>
+
       <form method="POST" hx-post="/pomodoros" hx-target="#placeholder" id="pomodoro-form">
         <div class="mb-3">
           <label for="category-names">Categories</label>
           <div id="category-names" hx-get="/categories" hx-trigger="load" hx-target="this" hx-swap="outerHTML"></div>
+
         </div>
 
         <div class="mb-3">
