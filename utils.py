@@ -14,8 +14,9 @@ from pypika import Table, Parameter
 from authentication import OAuth2PasswordBearerWithCookie
 from config import settings
 from data import DB
-from models import TokenData, ResponseUser
+from models import ResponseUser
 import queries
+import query as q
 
 # General utils
 
@@ -61,6 +62,13 @@ def select_user(email:str)-> DataFrame:
     user = DB.pandas_query(query.get_sql(), values)
 
     return user
+
+# Categories utils
+
+def get_categories_list(user_id:int)-> list[str]:
+    values = (user_id, )
+    df = q.get_categories(values)
+    return df.to_dict('records')
 
 # Pomodoros utils
 

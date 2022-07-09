@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 from models import CategoryResponse, ResponseUser
 from data import DB
 import query as q
-from utils import get_current_user
+from utils import get_current_user, get_categories_list
 
 templates = Jinja2Templates(directory="templates")
 
@@ -15,14 +15,6 @@ router = APIRouter(
     prefix='/categories',
     tags=["Categories"]
 )
-
-def get_categories_list(user_id:int)-> list[str]:
-    values = (user_id, )
-    df = q.get_categories(values)
-    return df.to_dict('records')
-
-
-
 
 @router.post(
     path="/",

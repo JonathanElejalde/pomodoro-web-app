@@ -46,6 +46,8 @@
     <div class="row my-5">
       <h3 class="text-center display-4">Create a Pomodoro</h3>
 
+      <!-- Create a new category form -->
+
       <button _="on click toggle .hidden on #create-category then
                 if my innerHTML == 'Create Category'
                   set my innerHTML to 'Hide'
@@ -63,6 +65,21 @@
                   hx-target="#category-names"
                   hx-swap="outerHTML"
                   >Create</button>
+        </div>
+      </form>
+
+      <!-- Create a new project form -->
+
+      <button _="on click toggle .hidden on #create-project then
+                if my innerHTML == 'Create Project'
+                  set my innerHTML to 'Hide'
+                otherwise 
+                  set my innerHTML to 'Create Project'"
+                >Create Project</button>
+
+      <form id="create-project" class="hidden" method="POST">
+        <div id="new-project">
+          <div id="category-names" hx-get="/projects/create_project" hx-trigger="load" hx-target="#new-project" hx-swap="outerHTML"></div>
         </div>
       </form>
 

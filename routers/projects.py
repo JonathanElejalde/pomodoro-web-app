@@ -1,14 +1,14 @@
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, status, Depends, HTTPException, Request, Header, Form, Query, Path
+from fastapi import APIRouter, status, Depends, Request, Form, Query, Path
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from models import Project, ProjectResponse, ResponseUser
+from models import ResponseUser
 from data import DB
 import query as q
-from utils import get_current_user, get_current_endpoint
+from utils import get_current_user, get_current_endpoint, get_categories_list
 
 templates = Jinja2Templates(directory="templates")
 
@@ -21,19 +21,29 @@ router = APIRouter(
 
 @router.post(
     path="/",
+    response_class=HTMLResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create project"
 )
-def create_project(project:Project, current_user:ResponseUser = Depends(get_current_user)):
+def create_project(request:Request, category_id:int = Form(...), 
+        project_name:str = Form(...), current_user:ResponseUser = Depends(get_current_user)
+    ):
     user_id = current_user['user_id']
     start = datetime.today()
-    values = (user_id, project.category_id, project.project_name, start)
+    values = (user_id, category_id, project_name, start)
     query = q.create_project()
 
     # Execute query
     DB.execute_query(query, values)
 
-    return {"details": f"Project {project.project_name} was created sucessfully"}
+    # Get categories
+    categories = get_categories_list(user_id)
+    context = {
+        'request': request,
+        'categories': categories
+    }
+
+    return templates.TemplateResponse("components/create_project.html", context=context)
 
 
 @router.get(
@@ -176,3 +186,20 @@ def edit_recall_project(request:Request, project_id:int = Path(...,),
     
     return templates.TemplateResponse('components/edit_project.html', context=context)
 
+@router.get(
+    path="/create_project",
+    response_class=HTMLResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Create project"
+)
+def create_project_form(request:Request, current_user:ResponseUser = Depends(get_current_user)
+    ):
+    user_id = current_user['user_id']
+    # Get categories
+    categories = get_categories_list(user_id)
+    context = {
+        'request': request,
+        'categories': categories
+    }
+
+    return templates.TemplateResponse("components/create_project.html", context=context)
