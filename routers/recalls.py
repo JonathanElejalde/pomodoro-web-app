@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, status, Depends, HTTPException, Form, Request, Header
+from fastapi import APIRouter, Query, status, Depends, HTTPException, Form, Request, Header
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
@@ -39,9 +39,9 @@ def get_recalls_home(request:Request, current_user:ResponseUser = Depends(get_cu
     status_code=status.HTTP_200_OK,
     summary="Update a recall"
 )
-def update_recalls(
-    recall_id:int, recall_title:str = None,
-    recall:str = None, current_user:ResponseUser = Depends(get_current_user)
+def update_recalls(request: Request, recall_id:int, 
+        recall_title:str = Form(), recall:str = Form(), 
+        current_user:ResponseUser = Depends(get_current_user)
     ):
     user_id = current_user['user_id']
     query, values = q.update_recall(recall_id, recall_title, recall, user_id)
@@ -49,9 +49,17 @@ def update_recalls(
     # Execute query
     DB.execute_query(query, tuple(values))
 
-    return {
-        "detail": f"Recall {recall_id} was updated sucessfully"
+    values = [user_id, recall_id]
+    df = q.get_recalls(values, recall_id)
+
+    df['recall'] = df.recall.apply(markdown_to_html)
+    recall = df.to_dict('records')[0]
+    context = {
+        "request": request,
+        "recall": recall
     }
+
+    return templates.TemplateResponse("components/recall_edited.html", context=context)
 
 
 @router.delete(
@@ -70,6 +78,26 @@ def delete_recall(recall_id:int, current_user:ResponseUser = Depends(get_current
         'Detail': f"Recall {recall_id} was deleted"
     }
 
+@router.get(
+    path="/{recall_id}/edit",
+    include_in_schema=False,
+    response_class=HTMLResponse
+)
+def edit_recall_project(request:Request, recall_id:int, 
+    current_user:ResponseUser = Depends(get_current_user)
+    ):
+    user_id = current_user['user_id']
+    values = [user_id, recall_id]
+    df = q.get_recalls(values, recall_id)
+
+    recall = df.to_dict('records')[0]
+    context = {
+        "request": request,
+        "recall": recall
+    }
+    
+    return templates.TemplateResponse('components/edit_recall.html', context=context)
+
 
 @router.get(
     path="/text/",
@@ -79,7 +107,7 @@ def delete_recall(recall_id:int, current_user:ResponseUser = Depends(get_current
 )
 def get_recalls(request:Request, recall_project_id: int, current_user:ResponseUser = Depends(get_current_user), hx_request: Optional[str] = Header(None)):
     user_id = current_user['user_id']
-    values = (recall_project_id, user_id)
+    values = (user_id, recall_project_id)
     df = q.get_recalls(values)
 
     if df.empty:

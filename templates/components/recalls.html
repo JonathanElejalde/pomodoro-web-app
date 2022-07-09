@@ -1,10 +1,18 @@
 
 <div id="recalls-list">
-{% for recall in recalls %}
     <ul style="list-style-type: none;">
-        <h2>{{recall.recall_title}}</h2>
-        <li>{{recall.recall | safe}}</li>
-        <button class="btn btn-primary">Update</button>
-    </ul>        
-{% endfor %}
+    {% for recall in recalls %}
+        <li>
+            <h2>{{recall.recall_title}}</h2>
+            {{recall.recall | safe}}
+            <button class="btn btn-primary"
+                    hx-get="/recalls/{{recall.recall_id}}/edit"
+                    hx-target="closest li"
+                    hx-swap="outerHTML"
+                    >Edit
+            </button>
+        </li>
+        
+    {% endfor %}
+    </ul> 
 </div>

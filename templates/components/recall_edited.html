@@ -1,0 +1,10 @@
+<li>
+    <h2>{{recall.recall_title}}</h2>
+    {{recall.recall | safe}}
+    <button class="btn btn-primary"
+            hx-get="/recalls/{{recall.recall_id}}/edit"
+            hx-target="closest li"
+            hx-swap="outerHTML"
+            >Edit
+    </button>
+</li>

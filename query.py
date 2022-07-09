@@ -225,7 +225,7 @@ def create_recall()-> str:
 
     return query.get_sql()
 
-def get_recalls(values:tuple)-> DataFrame:
+def get_recalls(values:tuple, recall_id:int = None)-> DataFrame:
     join_on = [
         (RECALL_PROJECTS, (RECALLS.user_id == RECALL_PROJECTS.user_id) & (RECALLS.recall_project_id == RECALL_PROJECTS.recall_project_id))
     ]
@@ -233,9 +233,14 @@ def get_recalls(values:tuple)-> DataFrame:
         RECALLS.recall_id, RECALL_PROJECTS.recall_project_id, 
         RECALL_PROJECTS.project_name, RECALLS.recall_title, RECALLS.recall
         ]
-    condition = [
-        RECALLS.recall_project_id == Parameter("%s"), RECALLS.user_id == Parameter("%s")
-    ]
+
+    condition = [RECALLS.user_id == Parameter("%s")]
+
+    if recall_id:
+        condition.append(RECALLS.recall_id == Parameter("%s"))
+    else:
+        condition.append(RECALLS.recall_project_id == Parameter("%s"))
+
     query = queries.select_join_on_query(RECALLS, join_on, columns, condition)
 
     # Execute query
