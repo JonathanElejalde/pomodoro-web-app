@@ -45,6 +45,21 @@ def create_project(project:Project, current_user:ResponseUser = Depends(get_curr
 def get_projects(request: Request, current_user:ResponseUser = Depends(get_current_user)):
     return templates.TemplateResponse("/general_pages/projects.html", {"request": request})
 
+@router.delete(
+    path="/{project_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Delete project",
+    response_class=HTMLResponse
+)
+def delete_project(request: Request, project_id:int = Path(...), current_user:ResponseUser = Depends(get_current_user)):
+    user_id = current_user['user_id']
+    values = (project_id, user_id)
+    query = q.delete_project()
+    
+    # Execute query
+    DB.execute_query(query, values)
+
+    return "<tr></tr>"
 
 
 @router.put(
@@ -85,7 +100,7 @@ def update_project(category_id:int, project_id:int, current_user:ResponseUser = 
 
 
 @router.put(
-    path="/name/{project_id}",
+    path="/{project_id}/name",
     status_code=status.HTTP_200_OK,
     summary="Cancel a project"
 )
@@ -110,22 +125,6 @@ def update_project(request: Request, project_id:int = Path(...,), new_project_na
     
     return templates.TemplateResponse('components/project_edited.html', context=context)
 
-
-@router.delete(
-    path="/{project_id}",
-    status_code=status.HTTP_200_OK,
-    summary="Delete project",
-    response_class=HTMLResponse
-)
-def delete_project(request: Request, project_id:int = Path(...), current_user:ResponseUser = Depends(get_current_user)):
-    user_id = current_user['user_id']
-    values = (project_id, user_id)
-    query = q.delete_project()
-    
-    # Execute query
-    DB.execute_query(query, values)
-
-    return "<tr></tr>"
 
 @router.get(
     path="/names",
@@ -157,7 +156,7 @@ def get_projects_names(request: Request, category_id:int = Query(...), current_u
     
 
 @router.get(
-    path="/edit/{project_id}",
+    path="/{project_id}/edit",
     include_in_schema=False,
     response_class=HTMLResponse
 )

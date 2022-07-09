@@ -19,14 +19,6 @@ router = APIRouter(
 )
 
 # Recall project paths
-@router.get(
-    path="/create_recall_project",
-    include_in_schema=False
-)
-def create_recall_project_form(request:Request):
-    return templates.TemplateResponse("components/create_recall_project.html", {"request": request})
-
-
 @router.post(
     path="/",
     status_code=status.HTTP_201_CREATED,
@@ -97,29 +89,6 @@ def get_recall_projects(request: Request, current_user:ResponseUser = Depends(ge
         return templates.TemplateResponse('components/recall_projects.html', context=context)
     return templates.TemplateResponse("general_pages/recall_projects.html", context=context)
 
-
-@router.get(
-    path="/edit/{recall_project_id}",
-    include_in_schema=False,
-    response_class=HTMLResponse
-)
-def edit_recall_project(recall_project_id:int, request:Request, 
-    current_user:ResponseUser = Depends(get_current_user), hx_request: Optional[str] = Header(None)
-    ):
-    user_id = current_user['user_id']
-    values = [user_id, recall_project_id]
-    df = q.get_recall_projects(values)
-
-    recall_project = df.to_dict('records')[0]
-    context = {
-        "request": request,
-        "recall_project": recall_project
-    }
-    
-    return templates.TemplateResponse('components/edit_recall_project.html', context=context)
-
-
-
 @router.put(
     path="/{recall_project_id}",
     response_class=HTMLResponse,
@@ -166,3 +135,30 @@ def get_recall_project_names(
     DB.execute_query(query, values)
 
     return "<tr></tr>"
+
+@router.get(
+    path="/{recall_project_id}/edit",
+    include_in_schema=False,
+    response_class=HTMLResponse
+)
+def edit_recall_project(recall_project_id:int, request:Request, 
+    current_user:ResponseUser = Depends(get_current_user), hx_request: Optional[str] = Header(None)
+    ):
+    user_id = current_user['user_id']
+    values = [user_id, recall_project_id]
+    df = q.get_recall_projects(values)
+
+    recall_project = df.to_dict('records')[0]
+    context = {
+        "request": request,
+        "recall_project": recall_project
+    }
+    
+    return templates.TemplateResponse('components/edit_recall_project.html', context=context)
+
+@router.get(
+    path="/create_recall_project",
+    include_in_schema=False
+)
+def create_recall_project_form(request:Request):
+    return templates.TemplateResponse("components/create_recall_project.html", {"request": request})

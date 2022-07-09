@@ -38,7 +38,7 @@
                     <td> {{ project.project_name }}</td>
                     <td> 
                         <button class="btn btn-primary"
-                                hx-get="/recall_projects/edit/{{project.recall_project_id}}"
+                                hx-get="/recall_projects/{{project.recall_project_id}}/edit"
                                 hx-target="closest tr"
                                 hx-swap="outerHTML"
                                 >

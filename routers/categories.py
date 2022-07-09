@@ -109,7 +109,7 @@ def delete_category(category_id:int, current_user:ResponseUser = Depends(get_cur
     return "<tr></tr>"
 
 @router.get(
-    path="/edit/{category_id}",
+    path="/{category_id}/edit",
     include_in_schema=False,
     response_class=HTMLResponse
 )

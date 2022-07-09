@@ -5,7 +5,7 @@
     <td> {{ project.cancel }}</td>
     <td> 
         <button class="btn btn-primary"
-                hx-get="/projects/edit/{{project.project_id}}"
+                hx-get="/projects/{{project.project_id}}/edit"
                 hx-target="closest tr"
                 hx-swap="outerHTML",
                 hx-include="#category-names"

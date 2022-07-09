@@ -1,7 +1,7 @@
 
 <div id="recalls-list">
 {% for recall in recalls %}
-    <ul>
+    <ul style="list-style-type: none;">
         <h2>{{recall.recall_title}}</h2>
         <li>{{recall.recall | safe}}</li>
         <button class="btn btn-primary">Update</button>
