@@ -1,0 +1,10 @@
+
+<div id="recalls-list">
+{% for recall in recalls %}
+    <ul>
+        <h2>{{recall.recall_title}}</h2>
+        <li>{{recall.recall | safe}}</li>
+        <button class="btn btn-primary">Update</button>
+    </ul>        
+{% endfor %}
+</div>

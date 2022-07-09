@@ -8,7 +8,7 @@ from fastapi.templating import Jinja2Templates
 from models import Project, ProjectResponse, ResponseUser
 from data import DB
 import query as q
-from utils import get_current_user
+from utils import get_current_user, get_current_endpoint
 
 templates = Jinja2Templates(directory="templates")
 
@@ -146,16 +146,14 @@ def get_projects_names(request: Request, category_id:int = Query(...), current_u
         'projects': projects
     }
     current_url = request.headers.get('hx-current-url')
-    current_url = current_url.split("/")
-    current_url = [ele for ele in current_url if ele.strip()]
-    current_url = current_url[-1]
+    endpoint = get_current_endpoint(current_url)
 
-    if current_url == "pomodoro":
+    if endpoint == "pomodoro":
         return templates.TemplateResponse("/components/projects.html", context=context)
-    elif current_url == "projects":
+    elif endpoint == "projects":
         return templates.TemplateResponse("/components/projects_table.html", context=context)
     else:
-        raise ValueError(f"Current url is {current_url}, it does not match pomodoro or projects")
+        raise ValueError(f"Current url is {endpoint}, it does not match pomodoro or projects")
     
 
 @router.get(

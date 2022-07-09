@@ -1,4 +1,18 @@
-<select id="recall-projects" name="recall_project_id">
+{% if recalls_endpoint == True %}
+    <select id="recall-projects" 
+    name="recall_project_id"
+    hx-get="/recalls/text/"
+    hx-trigger="change"
+    hx-target="#recalls-list"
+    hx-swap="outerHTML"
+    required
+    >
+    <option selected>Choose a recall project</option>
+
+    {% else %}
+    <select id="recall-projects" name="recall_project_id">
+{% endif %}
+
     {% for project in projects %}
         <option name="recall_project_id" value="{{project.get('recall_project_id')}}">{{project.get('project_name')}}</option>
     {% endfor %}

@@ -8,7 +8,7 @@ from mysql.connector.errors import IntegrityError
 from models import RecallProjectResponse, ResponseUser
 from data import DB
 import query as q
-from utils import get_current_user
+from utils import get_current_user, get_current_endpoint
 
 
 templates = Jinja2Templates(directory="templates")
@@ -88,6 +88,12 @@ def get_recall_projects(request: Request, current_user:ResponseUser = Depends(ge
     }
 
     if hx_request:
+        current_url = request.headers.get('hx-current-url')
+        endpoint = get_current_endpoint(current_url)
+
+        if endpoint == "recalls":
+            context.update({"recalls_endpoint": True})
+            
         return templates.TemplateResponse('components/recall_projects.html', context=context)
     return templates.TemplateResponse("general_pages/recall_projects.html", context=context)
 

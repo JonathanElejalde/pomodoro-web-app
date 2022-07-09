@@ -6,6 +6,7 @@ from typing import Union
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
+import markdown as mk
 from pandas import DataFrame
 from passlib.context import CryptContext
 from pypika import Table, Parameter
@@ -27,6 +28,16 @@ def delete_message(db):
         message = "Unexpected error occured"
 
     return message
+
+def get_current_endpoint(url:str)-> str:
+    words = url.split("/")
+    words = [word for word in words if word.strip()]
+    endpoint = words[-1]
+
+    return endpoint
+
+def markdown_to_html(text:str)-> str:
+    return mk.markdown(text)
 
 # User utils
 
