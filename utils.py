@@ -33,7 +33,9 @@ def delete_message(db):
 def get_current_endpoint(url:str)-> str:
     words = url.split("/")
     words = [word for word in words if word.strip()]
-    endpoint = words[-1]
+    
+    # Example of words ['http:', '127.0.0.1:8000', 'recalls', '?']
+    endpoint = words[2]
 
     return endpoint
 
