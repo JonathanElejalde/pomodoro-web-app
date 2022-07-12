@@ -48,14 +48,14 @@
 
       <!-- Create a new category form -->
 
-      <button _="on click toggle .hidden on #create-category then
+      <button _="on click toggle .visually-hidden on #create-category then
                 if my innerHTML == 'Create Category'
                   set my innerHTML to 'Hide'
                 otherwise 
                   set my innerHTML to 'Create Category'"
                 >Create Category</button>
 
-      <form id="create-category" class="hidden" method="POST">
+      <form id="create-category" class="visually-hidden" method="POST">
         <div id="new-category" class="mb-3">
           <label>Create a category</label>
           <input id="new-category-name" type="text" name="category_name" 
@@ -70,14 +70,14 @@
 
       <!-- Create a new project form -->
 
-      <button _="on click toggle .hidden on #create-project then
+      <button _="on click toggle .visually-hidden on #create-project then
                 if my innerHTML == 'Create Project'
                   set my innerHTML to 'Hide'
                 otherwise 
                   set my innerHTML to 'Create Project'"
                 >Create Project</button>
 
-      <form id="create-project" class="hidden" method="POST">
+      <form id="create-project" class="visually-hidden" method="POST">
         <div id="new-project">
           <div id="category-names" hx-get="/projects/create_project" hx-trigger="load" hx-target="#new-project" hx-swap="outerHTML"></div>
         </div>
