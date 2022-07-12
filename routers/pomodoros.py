@@ -47,6 +47,37 @@ def create_pomodoro(
     return f'<h3 style="color:{color};" id="placeholder">Pomodoro created, Start the timer</h3>'
 
 
+@router.put(
+    path="/",
+    status_code=status.HTTP_200_OK,
+    summary="Measure pomodoro satisfaction",
+    response_class=HTMLResponse,
+)
+def update_pomodoro_satisfaction(request: Request, satisfaction:Satisfaction = Form(...), current_user:ResponseUser = Depends(get_current_user)):
+    user_id = current_user['user_id']
+    values = (user_id,)
+    df = q.get_latest_pomodoro(values)
+    pomodoro = df.to_dict('records')[0]
+
+    satisfaction = get_satisfaction_int(satisfaction.value)
+    values = (satisfaction, pomodoro['pomodoro_id'], user_id)
+    query = q.update_pomodoro_satisfaction()
+
+    # Execute query
+    DB.execute_query(query, values)
+
+    return '<p id="pomodoro-confirmation">Sent</p>'
+
+
+@router.get(
+    path="/satisfaction",
+    status_code=status.HTTP_200_OK,
+    response_class=HTMLResponse,
+    include_in_schema=False,
+)
+def get_satisfaction_modal(request:Request, current_user:ResponseUser = Depends(get_current_user)):
+    return '<div id="pomodoro-confirmation"></div>'
+
 @router.get(
     path="/{category_id}/{project_id}",
     response_model=list[PomodoroResponse],
@@ -70,20 +101,3 @@ def get_pomodoro(category_id:int, project_id:int, current_user:ResponseUser = De
 
     return df.to_dict('records')
 
-@router.put(
-    path="/{pomodoro_id}",
-    status_code=status.HTTP_200_OK,
-    summary=""
-)
-def update_pomodoro_satisfaction(pomodoro_id:int, satisfaction:Satisfaction, current_user:ResponseUser = Depends(get_current_user)):
-    user_id = current_user['user_id']
-    satisfaction = get_satisfaction_int(satisfaction.value)
-    values = (satisfaction, pomodoro_id, user_id)
-    query = q.update_pomodoro_satisfaction()
-
-    # Execute query
-    DB.execute_query(query, values)
-
-    return {
-        'Detail': f"Satisfaction updated in pomodoro {pomodoro_id}"
-    }

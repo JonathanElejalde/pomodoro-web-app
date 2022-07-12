@@ -172,6 +172,17 @@ def update_pomodoro_satisfaction()-> str:
 
     return query.get_sql()
 
+def get_latest_pomodoro(values:tuple)-> str:
+    columns = [POMODOROS.pomodoro_id]
+    condition = [
+        POMODOROS.user_id == Parameter("%s")
+    ]
+    query = queries.select_query(POMODOROS, columns=columns, condition=condition, order_by="pomodoro_date", limit=1)
+    df = DB.pandas_query(query.get_sql(), values)
+
+    return df
+
+
     
 # Recall Projects
 def create_recall_project()-> str:

@@ -19,76 +19,132 @@
     <!-- Countdown timer 
     Taken from: https://contactmentor.com/build-30-minutes-countdown-timer-js-sound/
     -->
-    <h1>CountDown Timer</h1>
-    <div>
-      <span class="count-digit">0</span>
-      <span class="count-digit">0</span>
-      <span class="separator">:</span>
-      <span class="count-digit">0</span>
-      <span class="count-digit">0</span>
+    <div class="container">
+      <h1>CountDown Timer</h1>
+      <div>
+        <span class="count-digit">0</span>
+        <span class="count-digit">0</span>
+        <span class="separator">:</span>
+        <span class="count-digit">0</span>
+        <span class="count-digit">0</span>
+      </div>
+      <div class="options">
+        <button id="stop-timer">
+          <img src="https://img.icons8.com/ios-glyphs/30/000000/pause--v1.png" />
+        </button>
+        <button id="start-timer">
+          <img src="https://img.icons8.com/ios-glyphs/30/000000/play--v1.png" />
+        </button>
+        <button id="reset-timer">
+          <img src="https://img.icons8.com/ios-glyphs/30/000000/stop.png" />
+        </button>
+      </div>
+      <audio id="alarm_audio"></audio>
     </div>
-    <div class="options">
-      <button id="stop-timer">
-        <img src="https://img.icons8.com/ios-glyphs/30/000000/pause--v1.png" />
-      </button>
-      <button id="start-timer">
-        <img src="https://img.icons8.com/ios-glyphs/30/000000/play--v1.png" />
-      </button>
-      <button id="reset-timer">
-        <img src="https://img.icons8.com/ios-glyphs/30/000000/stop.png" />
-      </button>
+    
+
+    <!-- Modal to grade pomodoro -->
+    <div class="modal" tabindex="-1" id="pomodoroModal">
+      <form action="POST">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Pomodoro Satisfaction</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p>Measure this pomodoro experience as bad or good.</p>
+
+                <select name="satisfaction">
+                  <option selected>Choose an option</option>
+                  <option value="good">Good</option>
+                  <option value="bad">Bad</option>
+                </select>
+            
+            <div id="pomodoro-confirmation"></div>
+
+            </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                        hx-get="/pomodoros/satisfaction"
+                        
+                        hx-target="#pomodoro-confirmation"
+                        hx-swap="outerHTML"
+                >Close</button>
+
+                <button type="button" class="btn btn-primary"
+                        hx-put="/pomodoros"
+                        hx-swap="outerHTML"
+                        hx-target="#pomodoro-confirmation"
+                >Send</button>
+              </div>
+          </div>
+        </div>
+      </form>
     </div>
-    <audio id="alarm_audio"></audio>
+    
 
 
 
-
-    <div class="row my-5">
       <h3 class="text-center display-4">Create a Pomodoro</h3>
 
       <!-- Create a new category form -->
+      <div class="container">
+        <div class="row">
+          <div class="col-6 border">
+            <button class="btn btn-dark" 
+                    _="on click toggle .visually-hidden on #create-category then
+                      if my innerHTML == 'Create Category'
+                        set my innerHTML to 'Hide'
+                      otherwise 
+                        set my innerHTML to 'Create Category'"
+                      >Create Category</button>
 
-      <button _="on click toggle .visually-hidden on #create-category then
-                if my innerHTML == 'Create Category'
-                  set my innerHTML to 'Hide'
-                otherwise 
-                  set my innerHTML to 'Create Category'"
-                >Create Category</button>
+            <form id="create-category" class="visually-hidden" method="POST">
+              <div id="new-category" class="mb-3">
+                <label>Create a category</label>
+                <input id="new-category-name" type="text" name="category_name" 
+                      class="form-control" required
+                      _="on click put '' into #new-category-name's value">
+                <button id="new-category-btn" type="submit"
+                        class="btn btn-primary"
+                        hx-post="/categories" 
+                        hx-target="#category-names"
+                        hx-swap="outerHTML"
+                        >Create</button>
+              </div>
+            </form>
+          </div>
 
-      <form id="create-category" class="visually-hidden" method="POST">
-        <div id="new-category" class="mb-3">
-          <label>Create a category</label>
-          <input id="new-category-name" type="text" name="category_name" 
-                 class="form-control" required
-                 _="on click put '' into #new-category-name's value">
-          <button id="new-category-btn" type="submit" hx-post="/categories" 
-                  hx-target="#category-names"
-                  hx-swap="outerHTML"
-                  >Create</button>
-        </div>
-      </form>
+        <!-- Create a new project form -->
+          <div class="col-6 border">
+            <button class="btn btn-dark"
+                    _="on click toggle .visually-hidden on #create-project then
+                      if my innerHTML == 'Create Project'
+                        set my innerHTML to 'Hide'
+                      otherwise 
+                        set my innerHTML to 'Create Project'"
+                      >Create Project</button>
 
-      <!-- Create a new project form -->
+            <form id="create-project" class="visually-hidden" method="POST">
+              <div id="new-project">
+                <div id="category-names" hx-get="/projects/create_project" hx-trigger="load" hx-target="#new-project" hx-swap="outerHTML"></div>
+              </div>
+            </form>
+          </div>
+        </div>  
+      
+      </div>
 
-      <button _="on click toggle .visually-hidden on #create-project then
-                if my innerHTML == 'Create Project'
-                  set my innerHTML to 'Hide'
-                otherwise 
-                  set my innerHTML to 'Create Project'"
-                >Create Project</button>
-
-      <form id="create-project" class="visually-hidden" method="POST">
-        <div id="new-project">
-          <div id="category-names" hx-get="/projects/create_project" hx-trigger="load" hx-target="#new-project" hx-swap="outerHTML"></div>
-        </div>
-      </form>
-
+      <!-- Choose a category -->
       <form method="POST" hx-post="/pomodoros" hx-target="#placeholder" id="pomodoro-form">
         <div class="mb-3">
           <label for="category-names">Categories</label>
           <div id="category-names" hx-get="/categories" hx-trigger="load" hx-target="this" hx-swap="outerHTML"></div>
 
         </div>
+
+      <!-- Choose a project -->
 
         <div class="mb-3">
             <label for="project-names">Projects</label>
@@ -101,7 +157,6 @@
 
         <button type="submit" class="btn btn-primary">Submit</button>
       </form>
-    </div>
 
     <div id="placeholder"></div>
 

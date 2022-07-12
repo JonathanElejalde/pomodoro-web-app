@@ -8,11 +8,15 @@ const startAction = document.getElementById("start-timer");
 const stopAction = document.getElementById("stop-timer");
 const resetAction = document.getElementById("reset-timer");
 
+// modal
+const pomodoroModal = new bootstrap.Modal(document.getElementById('pomodoroModal'))
+
+
 // Select HTML5 Audio element
 const timeoutAudio = document.getElementById("alarm_audio");
 
 // Default inital value of timer
-const defaultValue = 25 * 60;
+const defaultValue = 10;
 
 // variable to the time
 var countDownTime = defaultValue;
@@ -92,5 +96,8 @@ const runCountDown = () => {
     // Play alarm on timeout
     timeoutAudio.play();
     countDownTime = defaultValue;
+
+    //Show modal to grade pomodoro
+    pomodoroModal.show()
   }
 };

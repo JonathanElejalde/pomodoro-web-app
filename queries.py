@@ -23,6 +23,7 @@ def insert_query(table:Table, columns:list[Field])-> MySQLQuery:
 def select_query(
     table:Table, columns:list[Field], condition:list = None, 
     distinct:bool = False, criterion:str = 'all',
+    order_by: str = None, limit:int = None
     )-> MySQLQuery:
     query = MySQLQuery.from_(table).select(*columns)
 
@@ -35,7 +36,13 @@ def select_query(
         query = query.where(
             criterion(condition)
         )
+    
+    if order_by:
+        query = query.orderby(order_by, order=Order.desc)
 
+    if limit:
+        query = query.limit(limit)
+    
     return query
 
 def select_join_query(

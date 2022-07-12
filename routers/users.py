@@ -114,7 +114,7 @@ def login_for_token(response: Response, request: Request, auth_data: OAuth2Passw
 def login(response: Response, request: Request, auth_data: OAuth2PasswordRequestForm = Depends()):
 
     login_for_token(response, request, auth_data)
-    return templates.TemplateResponse("auth/login.html", context={"request": request, "msg": "Login Successful!"})
+    return RedirectResponse('/pomodoro')
 
 
 
