@@ -100,10 +100,7 @@ def login_for_token(response: Response, request: Request, auth_data: OAuth2Passw
     access_token = create_access_token(
         data={"sub": user["email"]}, expires_delta=access_token_expires
     )
-    # Set HttpOnly cookie in response
-    response.set_cookie(key="access_token",value=f"Bearer {access_token}", httponly=True)
-
-    #return templates.TemplateResponse("auth/login.html", context={"request": request, "msg": "Login Successful!"})
+    
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post(
@@ -112,9 +109,18 @@ def login_for_token(response: Response, request: Request, auth_data: OAuth2Passw
     summary="User login",
 )
 def login(response: Response, request: Request, auth_data: OAuth2PasswordRequestForm = Depends()):
+    res = login_for_token(response, request, auth_data)
+    
+    if type(res) == dict:
+        response = templates.TemplateResponse("general_pages/pomodoro.html", context={"request": request})
+        access_token = res['access_token']
+        # Set HttpOnly cookie in response
+        response.set_cookie(key="access_token",value=f"Bearer {access_token}", httponly=True)
 
-    login_for_token(response, request, auth_data)
-    return RedirectResponse('/pomodoro')
+        return response
+    else:
+        return res
+
 
 
 
