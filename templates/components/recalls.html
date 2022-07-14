@@ -3,7 +3,7 @@
     <ul style="list-style-type: none;">
     {% for recall in recalls %}
         <li>
-            <h2>{{recall.recall_title}}</h2>
+            <h5>{{recall.recall_title}}</h5>
             {{recall.recall | safe}}
             <button class="btn btn-dark btn-rounded"
                     hx-get="/recalls/{{recall.recall_id}}/edit"
