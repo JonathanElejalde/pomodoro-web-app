@@ -1,7 +1,7 @@
 <tr scope="row">
     <td> {{ category.category_name }}</td>
     <td> 
-        <button class="btn btn-primary"
+        <button class="btn btn-dark btn-rounded"
                 hx-get="/categories/{{category.category_id}}/edit"
                 hx-target="closest tr"
                 hx-swap="outerHTML"
@@ -11,7 +11,7 @@
     </td>
     <td>
         <button 
-            class="btn btn-danger"
+            class="btn btn-danger btn-rounded"
             hx-delete="/categories/{{ category.category_id }}" 
             hx-confirm="Are you sure?"
             hx-target="closest tr"

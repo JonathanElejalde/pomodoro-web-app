@@ -4,7 +4,7 @@
     <td> {{ project.end }}</td>
     <td> {{ project.cancel }}</td>
     <td> 
-        <button class="btn btn-primary"
+        <button class="btn btn-dark btn-rounded"
                 hx-get="/projects/{{project.project_id}}/edit"
                 hx-target="closest tr"
                 hx-swap="outerHTML",
@@ -15,7 +15,7 @@
     </td>
     <td>
         <button 
-            class="btn btn-danger"
+            class="btn btn-danger btn-danger"
             hx-delete="/projects/{{ project.project_id }}" 
             hx-confirm="Are you sure?"
             hx-target="closest tr"

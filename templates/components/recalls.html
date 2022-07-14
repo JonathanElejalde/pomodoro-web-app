@@ -5,7 +5,7 @@
         <li>
             <h2>{{recall.recall_title}}</h2>
             {{recall.recall | safe}}
-            <button class="btn btn-primary"
+            <button class="btn btn-dark btn-rounded"
                     hx-get="/recalls/{{recall.recall_id}}/edit"
                     hx-target="closest li"
                     hx-swap="outerHTML"

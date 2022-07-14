@@ -5,7 +5,7 @@
         <input id="recall-project-id" name="recall_project_id" type="hidden" value="{{recall_project.recall_project_id}}" <="" td="">
     </td>
     <td>
-        <button class="btn btn-primary" 
+        <button class="btn btn-dark btn-rounded" 
                 hx-put="/recall_projects/{{recall_project.recall_project_id}}" 
                 hx-include="closest tr"
                 hx-target="closest tr"
@@ -14,7 +14,7 @@
     </td>
     <td>
         <button 
-            class="btn btn-danger"
+            class="btn btn-danger btn-rounded"
             hx-delete="/recall_projects/{{ recall_project.recall_project_id }}" 
             hx-confirm="Are you sure?"
             hx-target="closest tr"

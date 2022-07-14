@@ -10,11 +10,15 @@
     <label>Add Project Name</label>
     <input id="new-project-name" type="text" name="project_name" class="form-control" required>
 
-    <button id="new-project-btn" type="submit" hx-post="/projects"
-            hx-target="#new-project" hx-swap="outerHTML"
+    <button id="new-project-btn" type="submit" class="btn btn-dark btn-rounded"
+            hx-post="/projects"
+            hx-target="#new-project" 
+            hx-swap="outerHTML"
             >Create</button>
         
-    <button id="new-project-btn" type="submit" hx-get="/projects/create_project"
-            hx-target="#new-project" hx-swap="outerHTML"
+    <button id="new-project-btn" type="submit" class="btn btn-dark btn-rounded"
+            hx-get="/projects/create_project"
+            hx-target="#new-project" 
+            hx-swap="outerHTML"
     >Refresh Categories</button>
 </div>

@@ -50,7 +50,7 @@
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title">Pomodoro Satisfaction</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <button type="button" class="btn-close btn-dark btn-rounded" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
               <p>Measure this pomodoro experience as bad or good.</p>
@@ -65,14 +65,14 @@
 
             </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                <button type="button" class="btn btn-danger btn-rounded" data-bs-dismiss="modal"
                         hx-get="/pomodoros/satisfaction"
                         
                         hx-target="#pomodoro-confirmation"
                         hx-swap="outerHTML"
                 >Close</button>
 
-                <button type="button" class="btn btn-primary"
+                <button type="button" class="btn btn-dark btn-rounded"
                         hx-put="/pomodoros"
                         hx-swap="outerHTML"
                         hx-target="#pomodoro-confirmation"
@@ -92,7 +92,7 @@
       <div class="container">
         <div class="row">
           <div class="col-6 border">
-            <button class="btn btn-dark" 
+            <button class="btn btn-dark btn-rounded" 
                     _="on click toggle .visually-hidden on #create-category then
                       if my innerHTML == 'Create Category'
                         set my innerHTML to 'Hide'
@@ -107,7 +107,7 @@
                       class="form-control" required
                       _="on click put '' into #new-category-name's value">
                 <button id="new-category-btn" type="submit"
-                        class="btn btn-primary"
+                        class="btn btn-dark btn-rounded"
                         hx-post="/categories" 
                         hx-target="#category-names"
                         hx-swap="outerHTML"
@@ -118,7 +118,7 @@
 
         <!-- Create a new project form -->
           <div class="col-6 border">
-            <button class="btn btn-dark"
+            <button class="btn btn-dark btn-rounded"
                     _="on click toggle .visually-hidden on #create-project then
                       if my innerHTML == 'Create Project'
                         set my innerHTML to 'Hide'
@@ -155,7 +155,7 @@
             <input type="number" id="pomodoro-duration" name="duration" min="25" max="25" step="5" placeholder="25" required>
         </div>
 
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <button type="submit" class="btn btn-dark btn-rounded">Submit</button>
       </form>
 
     <div id="placeholder"></div>
