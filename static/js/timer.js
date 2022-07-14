@@ -16,7 +16,7 @@ const pomodoroModal = new bootstrap.Modal(document.getElementById('pomodoroModal
 const timeoutAudio = document.getElementById("alarm_audio");
 
 // Default inital value of timer
-const defaultValue = 10;
+const defaultValue = 25 * 60;
 
 // variable to the time
 var countDownTime = defaultValue;

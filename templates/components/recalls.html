@@ -1,10 +1,12 @@
-
 <div id="recalls-list">
     <ul style="list-style-type: none;">
     {% for recall in recalls %}
         <li>
-            <h5>{{recall.recall_title}}</h5>
-            {{recall.recall | safe}}
+            <div class="text-sm-start">
+                <h5>{{recall.recall_title}}</h5>
+                {{recall.recall | safe}}
+            </div>
+            
             <button class="btn btn-dark btn-rounded"
                     hx-get="/recalls/{{recall.recall_id}}/edit"
                     hx-target="closest li"

@@ -1,6 +1,6 @@
 <li>
 <input id='recall-title' name="recall_title" value='{{recall.recall_title}}' <="" td="">
-<textarea required name="recall" id="recall" rows="10">{{recall.recall}}</textarea>
+<textarea required name="recall" id="recall" rows="10" style="min-width: 100%">{{recall.recall}}</textarea>
 <button class="btn btn-dark btn-rounded" 
             hx-put="/recalls/{{recall.recall_id}}" 
             hx-include="closest li"

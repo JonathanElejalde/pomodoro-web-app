@@ -40,7 +40,7 @@ def get_current_endpoint(url:str)-> str:
     return endpoint
 
 def markdown_to_html(text:str)-> str:
-    return mk.markdown(text)
+    return mk.markdown(text, extensions=['fenced_code', 'codehilite'])
 
 # User utils
 
