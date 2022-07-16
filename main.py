@@ -38,4 +38,5 @@ if __name__ == "__main__":
     if settings.ENV == 'PROD':
         uvicorn.run("main:app")
     elif settings.ENV == 'DEV':
+        print("Working on Dev")
         uvicorn.run("main:app", reload=True)

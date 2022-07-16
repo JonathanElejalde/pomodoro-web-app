@@ -7,6 +7,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 import markdown as mk
+from markdown.extensions import Extension
 from pandas import DataFrame
 from passlib.context import CryptContext
 from pypika import Table, Parameter
@@ -17,6 +18,14 @@ from data import DB
 from models import ResponseUser
 import queries
 import query as q
+
+
+
+class EscapeHtml(Extension):
+    def extendMarkdown(self, md):
+        md.preprocessors.deregister('html_block')
+        md.inlinePatterns.deregister('html')
+
 
 # General utils
 
@@ -40,7 +49,7 @@ def get_current_endpoint(url:str)-> str:
     return endpoint
 
 def markdown_to_html(text:str)-> str:
-    return mk.markdown(text, extensions=['fenced_code', 'codehilite'])
+    return mk.markdown(text, extensions=[EscapeHtml(), 'fenced_code', 'codehilite', 'nl2br'])
 
 # User utils
 
