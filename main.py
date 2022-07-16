@@ -34,4 +34,8 @@ def pomodoro(request: Request, current_user:ResponseUser = Depends(get_current_u
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", reload=True)
+
+    if settings.ENV == 'PROD':
+        uvicorn.run("main:app")
+    elif settings.ENV == 'DEV':
+        uvicorn.run("main:app", reload=True)
