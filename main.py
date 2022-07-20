@@ -1,3 +1,6 @@
+import warnings 
+warnings.filterwarnings(action= 'ignore')
+
 from fastapi import FastAPI, Request, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
