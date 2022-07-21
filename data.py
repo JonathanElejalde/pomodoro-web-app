@@ -33,11 +33,26 @@ class Database:
             self.conn.close()
 
     def execute_query(self, query:str, values:Union[tuple, list[tuple]]):
-        self.cursor.execute(query, values)
+        try:
+            self.cursor.execute(query, values)
+        except Exception as e:
+            # This is a quick hack to solve the issue
+            # Try to solve it in a cleaner way 
+
+            # Add e to some log
+            self.conn.reconnect()
+            self.cursor.execute(query, values)
+
         self.conn.commit()
 
     def pandas_query(self, query:str, params:Union[tuple, list[tuple], dict] = ())-> pd.DataFrame:
-        df = pd.read_sql(query, self.conn, params=params)
+        try:
+            df = pd.read_sql(query, self.conn, params=params)
+        except Exception as e:
+            # Add e to some log
+            self.conn.reconnect()
+            df = pd.read_sql(query, self.conn, params=params)
+
 
         return df
 
