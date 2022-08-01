@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import random
 
 from fastapi import APIRouter, status, Depends, HTTPException, Form, Request
@@ -19,6 +19,29 @@ router = APIRouter(
 
 
 # Pomodoro paths
+@router.get(
+    path="/",
+    response_class=HTMLResponse,
+    status_code=status.HTTP_200_OK,
+    include_in_schema=False
+)
+def get_pomodoros_home(request:Request, current_user:ResponseUser = Depends(get_current_user)):
+    user_id = current_user['user_id']
+
+    # Last week date
+    last_week = datetime.today() - timedelta(days=7)
+    values = (user_id, last_week)
+    df = q.get_pomodoros(values, all=True)
+
+    pomodoros = df.to_dict('records')
+    context = {
+        'request': request,
+        'pomodoros': pomodoros
+    }
+
+
+    return templates.TemplateResponse("general_pages/pomodoros.html", context=context)
+
 @router.post(
     path="/",
     status_code=status.HTTP_201_CREATED,
