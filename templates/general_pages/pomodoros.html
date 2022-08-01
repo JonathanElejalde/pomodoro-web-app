@@ -1,0 +1,51 @@
+{% extends "shared/base.html" %}
+
+{% block title %}
+  <title>Pomodoros</title>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+<div id="errors" class="text-danger font-weight-bold">
+    {% for error in errors %}
+    <li>{{error}}</li>
+    {% endfor %}
+</div>
+</div>
+
+<h1 style="text-align: center;">Pomodoros</h1>
+
+<form class="d-flex">
+    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+    <button class="btn btn-outline-success" type="submit">Search</button>
+</form>
+
+<br/>
+<div class="mb-3">
+    <table class="table">
+        <thead class="table-dark">
+            <tr>
+                <th scope="col">Category Name</th>
+                <th scope="col">Project Name</th>
+                <th scope="col">Pomodoro Date</th>
+                <th scope="col">Duration</th>
+                <th scope="col">Satisfaction</th>
+            </tr>
+        </thead>
+        <tbody id="categories-list">
+
+            {% for pomodoro in pomodoros %}
+
+                <tr scope="row">
+                    <td> {{ pomodoro.category_name }}</td>
+                    <td> {{ pomodoro.project_name }}</td>
+                    <td> {{ pomodoro.pomodoro_date }}</td>
+                    <td> {{ pomodoro.duration }}</td>
+                    <td> {{ pomodoro.pomodoro_satisfaction }}</td>
+                </tr>
+                
+            {% endfor %}
+        </tbody>     
+    </table>
+</div>
+{% endblock %}
