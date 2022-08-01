@@ -8,6 +8,11 @@ CRITERION = {
     'any': Criterion.any,
 }
 
+# Helpers
+
+def _get_order(desc):
+    return Order.desc if desc else Order.asc
+
 
 def create_placeholders(amount:int)-> list[Parameter]:
     return [Parameter("%s") for _ in range(amount)]
@@ -23,7 +28,7 @@ def insert_query(table:Table, columns:list[Field])-> MySQLQuery:
 def select_query(
     table:Table, columns:list[Field], condition:list = None, 
     distinct:bool = False, criterion:str = 'all',
-    order_by: str = None, limit:int = None
+    order_by: str = None, desc:bool = True, limit:int = None
     )-> MySQLQuery:
     query = MySQLQuery.from_(table).select(*columns)
 
@@ -38,7 +43,8 @@ def select_query(
         )
     
     if order_by:
-        query = query.orderby(order_by, order=Order.desc)
+        order = _get_order(desc)
+        query = query.orderby(order_by, order=order)
 
     if limit:
         query = query.limit(limit)
@@ -48,7 +54,8 @@ def select_query(
 def select_join_query(
     from_:Table, join:Table, on_fields:tuple[str],
     columns:list[Field], condition:tuple = None,
-    criterion: str = 'all'
+    criterion: str = 'all', order_by: str = None,
+    desc: bool = True
     )-> MySQLQuery:
     query =  MySQLQuery \
         .from_(from_) \
@@ -62,6 +69,10 @@ def select_join_query(
         query = query.where(
             criterion(condition)
         )
+    
+    if order_by:
+        order = _get_order(desc)
+        query = query.orderby(order_by, order=order)
 
     return query
 
