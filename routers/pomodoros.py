@@ -28,9 +28,8 @@ router = APIRouter(
 def get_pomodoros_home(request:Request, current_user:ResponseUser = Depends(get_current_user)):
     user_id = current_user['user_id']
 
-    # Last week date
-    last_week = datetime.today() - timedelta(days=7)
-    values = (user_id, last_week)
+    previous_30_days = datetime.today() - timedelta(days=30)
+    values = (user_id, previous_30_days)
     df = q.get_pomodoros(values, all=True)
 
     pomodoros = df.to_dict('records')
