@@ -49,14 +49,14 @@ def create_category()-> str:
 
     return query.get_sql()
 
-def get_categories(values:tuple, category_id:int = None)->DataFrame:
+def get_categories(values:tuple, category_id:int = None, order_by:str = "category_name", criterion='all')->DataFrame:
     columns = [CATEGORIES.category_id, CATEGORIES.category_name]
     condition = [CATEGORIES.user_id == Parameter("%s")]
 
     if category_id:
         condition.append(CATEGORIES.category_id == Parameter("%s"))
 
-    query = queries.select_query(CATEGORIES, columns, condition, criterion='all')
+    query = queries.select_query(CATEGORIES, columns, condition, order_by=order_by, criterion=criterion, desc=False)
     df = DB.pandas_query(query.get_sql(), values)
 
     return df
@@ -88,7 +88,7 @@ def create_project()-> str:
 
     return query.get_sql()
 
-def get_projects(values:tuple, project_id:int = None, category_id:int=None)-> DataFrame:
+def get_projects(values:tuple, project_id:int = None, category_id:int=None, order_by:str = "start", desc:bool = True)-> DataFrame:
     on_fields = ('category_id', 'user_id')
     columns = [
         PROJECTS.project_id, PROJECTS.category_id,
@@ -106,7 +106,8 @@ def get_projects(values:tuple, project_id:int = None, category_id:int=None)-> Da
 
     query = queries.select_join_query(
         PROJECTS, CATEGORIES, on_fields,
-        columns, condition, criterion='all'
+        columns, condition, criterion='all',
+        order_by=order_by, desc=desc
     )
     # Execute query
     df = DB.pandas_query(query.get_sql(), values)
@@ -200,7 +201,7 @@ def create_recall_project()-> str:
 
     return query.get_sql()
 
-def get_recall_projects(values:Union[tuple, list])-> DataFrame:
+def get_recall_projects(values:Union[tuple, list], order_by:str = "project_name", desc=False)-> DataFrame:
     columns = [RECALL_PROJECTS.recall_project_id, RECALL_PROJECTS.project_name]
 
     if type(values) == list:
@@ -210,7 +211,7 @@ def get_recall_projects(values:Union[tuple, list])-> DataFrame:
         ]
     else:
         condition = [RECALL_PROJECTS.user_id == Parameter('%s')]
-    query = queries.select_query(RECALL_PROJECTS, columns, condition)
+    query = queries.select_query(RECALL_PROJECTS, columns, condition, order_by=order_by, desc=desc)
     # Execute query
     df = DB.pandas_query(query.get_sql(), values)
 
