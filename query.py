@@ -142,7 +142,7 @@ def create_pomodoro()-> str:
 
     return query.get_sql()
 
-def get_pomodoros(values:tuple)-> DataFrame:
+def get_pomodoros(values:tuple, all:bool = False)-> DataFrame:
     join_on = [
         (PROJECTS, (POMODOROS.project_id == PROJECTS.project_id) & (POMODOROS.category_id == PROJECTS.category_id)),
         (CATEGORIES, (CATEGORIES.category_id == POMODOROS.category_id))
@@ -151,11 +151,19 @@ def get_pomodoros(values:tuple)-> DataFrame:
         POMODOROS.pomodoro_id, CATEGORIES.category_name, PROJECTS.project_name, POMODOROS.pomodoro_date,
         POMODOROS.duration, POMODOROS.pomodoro_satisfaction
     ]
-    condition = [
-        POMODOROS.user_id == Parameter("%s"),
-        POMODOROS.category_id == Parameter("%s"),
-        POMODOROS.project_id == Parameter("%s"),
-    ]
+    # Get latest pomodoros for specific user
+    if all:
+        condition = [
+            POMODOROS.user_id == Parameter("%s"),
+            POMODOROS.pomodoro_date >= Parameter("%s")
+        ]
+    # Get an specific pomodoro
+    else:
+        condition = [
+            POMODOROS.user_id == Parameter("%s"),
+            POMODOROS.category_id == Parameter("%s"),
+            POMODOROS.project_id == Parameter("%s"),
+        ]
     query = queries.select_join_on_query(
         POMODOROS, join_on, columns, condition, 'pomodoro_date'
     )
