@@ -38,7 +38,6 @@ def get_pomodoros_home(request:Request, current_user:ResponseUser = Depends(get_
         'pomodoros': pomodoros
     }
 
-
     return templates.TemplateResponse("general_pages/pomodoros.html", context=context)
 
 @router.post(

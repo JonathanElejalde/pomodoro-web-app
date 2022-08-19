@@ -112,7 +112,7 @@ def login(response: Response, request: Request, auth_data: OAuth2PasswordRequest
     res = login_for_token(response, request, auth_data)
     
     if type(res) == dict:
-        response = templates.TemplateResponse("general_pages/pomodoro.html", context={"request": request})
+        response = templates.TemplateResponse("general_pages/homepage.html", context={"request": request})
         access_token = res['access_token']
         # Set HttpOnly cookie in response
         response.set_cookie(key="access_token",value=f"Bearer {access_token}", httponly=True)
