@@ -24,7 +24,9 @@ exception_handlers = {
 app = FastAPI(
     title=settings.PROJECT_NAME, 
     version=settings.PROJECT_VERSION,
-    exception_handlers=exception_handlers
+    exception_handlers=exception_handlers,
+    docs_url=None,
+    redoc_url=None,
 )
 app.include_router(users.router)
 app.include_router(categories.router)
